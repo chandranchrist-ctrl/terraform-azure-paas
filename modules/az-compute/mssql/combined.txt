@@ -1,0 +1,530 @@
+===== data_blocks.tf =====
+data "azurerm_client_config" "current" {}
+
+data "azurerm_key_vault_secret" "sql_credentials" {
+  name         = var.sql_secret_name
+  key_vault_id = var.key_vault_id
+}
+
+locals {
+  sql_creds = jsondecode(data.azurerm_key_vault_secret.sql_credentials.value)
+}
+
+===== mssql.tf =====
+resource "azurerm_mssql_server" "mssql" {
+  name                = var.server_name
+  resource_group_name = var.resource_group_name
+  location            = var.location
+
+  version                      = var.server_version
+  administrator_login          = local.sql_creds.username
+  administrator_login_password = local.sql_creds.password
+
+  minimum_tls_version = "1.2"
+
+  public_network_access_enabled = var.enable_public_access
+
+  tags = var.tags
+
+  identity {
+    type = "SystemAssigned"
+  }
+
+  dynamic "azuread_administrator" {
+    for_each = var.enable_aad_admin ? [1] : []
+
+    content {
+      login_username = var.azuread_admin_username
+      object_id      = var.azuread_admin_object_id
+      tenant_id      = data.azurerm_client_config.current.tenant_id
+    }
+  }
+}
+
+# -----------------------------
+# MSSQL Database
+# -----------------------------
+resource "azurerm_mssql_database" "db" {
+  name      = var.database_name
+  server_id = azurerm_mssql_server.mssql.id
+
+  collation    = var.collation
+  license_type = "LicenseIncluded"
+  sku_name     = var.sku_name
+  max_size_gb  = var.max_size_gb
+
+
+
+  zone_redundant = var.zone_redundant
+
+  read_scale = var.read_scale
+
+  storage_account_type = var.storage_account_type
+
+  short_term_retention_policy {
+    retention_days = var.short_term_retention_days
+  }
+
+  dynamic "long_term_retention_policy" {
+    for_each = var.enable_long_term_retention ? [1] : []
+
+    content {
+      weekly_retention  = var.ltr_weekly_retention
+      monthly_retention = var.ltr_monthly_retention
+      yearly_retention  = var.ltr_yearly_retention
+      week_of_year      = var.ltr_week_of_year
+    }
+  }
+
+  tags = var.tags
+}
+
+
+
+
+===== outputs.tf =====
+output "server_id" {
+  value = azurerm_mssql_server.mssql.id
+}
+
+output "server_fqdn" {
+  value = azurerm_mssql_server.mssql.fully_qualified_domain_name
+}
+
+output "db_id" {
+  value = azurerm_mssql_database.db.id
+}
+
+===== private_endpoint.tf =====
+resource "azurerm_private_endpoint" "mssql" {
+  count               = var.enable_private_endpoint ? 1 : 0
+  name                = "${var.server_name}-pe"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  subnet_id           = var.private_subnet_id
+
+  private_service_connection {
+    name                           = "${var.server_name}-psc"
+    private_connection_resource_id = azurerm_mssql_server.mssql.id
+    subresource_names              = ["sqlServer"]
+    is_manual_connection           = false
+  }
+
+  # DNS AUTO-INTEGRATION (IMPORTANT)
+  dynamic "private_dns_zone_group" {
+    for_each = (
+      var.enable_private_endpoint && var.private_dns_zone_id != null
+    ) ? [1] : []
+
+    content {
+      name                 = "mssql-dns-zone-group"
+      private_dns_zone_ids = [var.private_dns_zone_id]
+    }
+  }
+}
+
+
+===== security.tf =====
+# -----------------------------
+# Firewall Rules (IP allow list)
+# -----------------------------
+resource "azurerm_mssql_firewall_rule" "allow_ips" {
+  for_each = toset(var.allowed_ips)
+
+  name             = replace(each.value, ".", "-")
+  server_id        = azurerm_mssql_server.mssql.id
+  start_ip_address = each.value
+  end_ip_address   = each.value
+}
+
+# -----------------------------
+# Outbound Firewall (optional)
+# -----------------------------
+resource "azurerm_mssql_outbound_firewall_rule" "outbound" {
+  count     = var.enable_outbound_firewall ? 1 : 0
+  server_id = azurerm_mssql_server.mssql.id
+  name      = "${var.server_name}-outbound"
+}
+
+# -----------------------------
+# Security Alert Policy
+# -----------------------------
+resource "azurerm_mssql_server_security_alert_policy" "alerts" {
+  count = var.enable_security_alerts ? 1 : 0
+
+  resource_group_name = var.resource_group_name
+  server_name         = azurerm_mssql_server.mssql.name
+
+  state = var.alerts_state
+
+  email_account_admins = var.email_account_admins
+  email_addresses      = var.email_addresses
+  retention_days       = var.alert_retention_days
+}
+
+# -----------------------------
+# Server Auditing
+# -----------------------------
+resource "azurerm_mssql_server_extended_auditing_policy" "server_audit" {
+  count             = var.enable_auditing ? 1 : 0
+  server_id         = azurerm_mssql_server.mssql.id
+  storage_endpoint  = var.audit_storage_endpoint
+  retention_in_days = var.audit_retention_days
+}
+
+# -----------------------------
+# Database Auditing
+# -----------------------------
+resource "azurerm_mssql_database_extended_auditing_policy" "db_audit" {
+  count             = var.enable_auditing ? 1 : 0
+  database_id       = azurerm_mssql_database.db.id
+  storage_endpoint  = var.audit_storage_endpoint
+  retention_in_days = var.audit_retention_days
+}
+
+# -----------------------------
+# Vulnerability Assessment
+# -----------------------------
+resource "azurerm_mssql_server_vulnerability_assessment" "va" {
+  count = var.enable_va ? 1 : 0
+
+  server_security_alert_policy_id = azurerm_mssql_server_security_alert_policy.alerts[0].id
+
+  storage_container_path     = var.va_storage_container
+  storage_account_access_key = var.va_storage_key
+
+  recurring_scans {
+    enabled                   = var.va_state
+    email_subscription_admins = var.email_account_admins
+    emails                    = var.email_addresses
+  }
+}
+
+
+/* Azure SQL Server (Managed Identity) - SQL can access Key Vault key for TDE encryption/decryption */
+resource "azurerm_key_vault_access_policy" "sql" {
+  key_vault_id = var.key_vault_id
+
+  tenant_id = data.azurerm_client_config.current.tenant_id
+  object_id = azurerm_mssql_server.mssql.identity[0].principal_id
+
+  key_permissions = [
+    "Get",
+    "WrapKey",
+    "UnwrapKey"
+  ]
+
+  secret_permissions = [
+    "Get",
+    "List",
+    "Set",
+    "Delete",
+    "Recover",
+    "Backup",
+    "Restore"
+  ]
+
+  depends_on = [
+    azurerm_mssql_server.mssql
+  ]
+}
+
+# resource "azurerm_role_assignment" "sql_storage_blob_contributor" {
+#   scope                = var.storage_account_id
+#   role_definition_name = "Storage Blob Data Contributor"
+#   principal_id         = azurerm_mssql_server.mssql.identity[0].principal_id
+# }
+
+resource "azurerm_mssql_virtual_network_rule" "service_endpoint_app" {
+  count = var.enable_service_endpoint_mssql ? 1 : 0
+
+  name      = "${var.server_name}-vnet-se-rule"
+  server_id = azurerm_mssql_server.mssql.id
+  subnet_id = var.app_subnet_id
+}
+
+===== tde.tf =====
+# -----------------------------
+# TDE (System or CMK)
+# -----------------------------
+resource "azurerm_mssql_server_transparent_data_encryption" "tde" {
+  count     = var.enable_tde ? 1 : 0
+  server_id = azurerm_mssql_server.mssql.id
+
+  # If CMK enabled → Key Vault Key used
+  key_vault_key_id = (var.enable_tde && var.use_cmk_tde) ? var.key_vault_key_id : null
+}
+
+===== variables.tf =====
+# =====================================================
+# BASIC SERVER CONFIGURATION
+# =====================================================
+
+variable "server_name" {
+  type = string
+}
+
+variable "database_name" {
+  type = string
+}
+
+variable "resource_group_name" {
+  type = string
+}
+
+variable "location" {
+  type = string
+}
+
+variable "tags" {
+  type = map(string)
+}
+
+variable "server_version" {
+  type    = string
+  default = "12.0"
+}
+
+variable "sku_name" {
+  type = string
+}
+
+variable "max_size_gb" {
+  type = number
+}
+
+variable "collation" {
+  type    = string
+  default = "SQL_Latin1_General_CP1_CI_AS"
+}
+
+# =====================================================
+# SECURITY - NETWORK ACCESS
+# =====================================================
+
+variable "enable_public_access" {
+  type    = bool
+  default = false
+}
+
+variable "allowed_ips" {
+  type    = list(string)
+  default = []
+}
+
+variable "enable_outbound_firewall" {
+  type    = bool
+  default = false
+}
+
+# =====================================================
+# IDENTITY - AZURE AD ADMIN
+# =====================================================
+
+variable "enable_aad_admin" {
+  type    = bool
+  default = false
+}
+
+variable "azuread_admin_username" {
+  type = string
+}
+
+variable "azuread_admin_object_id" {
+  type    = string
+  default = null
+}
+
+# =====================================================
+# KEY VAULT / SECRETS
+# =====================================================
+
+variable "key_vault_id" {
+  type = string
+}
+
+variable "sql_secret_name" {
+  type = string
+}
+
+# =====================================================
+# TRANSPARENT DATA ENCRYPTION (TDE)
+# =====================================================
+
+variable "enable_tde" {
+  type    = bool
+  default = true
+}
+
+variable "use_cmk_tde" {
+  type    = bool
+  default = false
+}
+
+variable "key_vault_key_id" {
+  type    = string
+  default = null
+}
+
+# =====================================================
+# AUDITING
+# =====================================================
+
+variable "enable_auditing" {
+  type    = bool
+  default = false
+}
+
+variable "audit_storage_endpoint" {
+  type    = string
+  default = null
+}
+
+variable "audit_retention_days" {
+  type    = number
+  default = 7
+}
+
+# =====================================================
+# SECURITY ALERTS + VA (DEFENDER)
+# =====================================================
+
+variable "enable_security_alerts" {
+  type    = bool
+  default = false
+}
+
+variable "alerts_state" {
+  type    = string
+  default = "Enabled"
+}
+
+variable "email_account_admins" {
+  type    = bool
+  default = true
+}
+
+variable "email_addresses" {
+  type = list(string)
+}
+
+variable "alert_retention_days" {
+  type    = number
+  default = 7
+}
+
+variable "enable_va" {
+  type    = bool
+  default = false
+}
+
+variable "va_state" {
+  type    = bool
+  default = true
+}
+
+variable "va_email_account_admins" {
+  type    = bool
+  default = false
+}
+
+variable "va_email_addresses" {
+  type    = list(string)
+  default = []
+}
+
+variable "va_storage_container" {
+  type    = string
+  default = null
+}
+
+variable "va_storage_key" {
+  type    = string
+  default = null
+}
+
+# =====================================================
+# BACKUP / LONG TERM RETENTION
+# =====================================================
+
+variable "enable_long_term_retention" {
+  type    = bool
+  default = false
+}
+
+variable "ltr_weekly_retention" {
+  type    = string
+  default = "P1W"
+}
+
+variable "ltr_monthly_retention" {
+  type    = string
+  default = "P1M"
+}
+
+variable "ltr_yearly_retention" {
+  type    = string
+  default = "P1Y"
+}
+
+variable "ltr_week_of_year" {
+  type    = number
+  default = 1
+}
+
+variable "short_term_retention_days" {
+  type    = number
+  default = 7
+}
+
+# =====================================================
+# NETWORKING (PRIVATE ACCESS)
+# =====================================================
+
+variable "enable_private_endpoint" {
+  type    = bool
+  default = false
+}
+
+variable "private_subnet_id" {
+  type    = string
+  default = null
+}
+
+# =====================================================
+# PERFORMANCE / AVAILABILITY
+# =====================================================
+
+variable "zone_redundant" {
+  type    = bool
+  default = false
+}
+
+variable "read_scale" {
+  type    = bool
+  default = false
+}
+
+variable "storage_account_type" {
+  type    = string
+  default = "Geo"
+}
+
+variable "storage_account_id" {
+  type = string
+}
+
+variable "private_dns_zone_id" {
+  type    = string
+  default = null
+}
+
+variable "app_subnet_id" {
+  type = string
+}
+
+variable "enable_service_endpoint_mssql" {
+  type    = bool
+  default = false
+}
+

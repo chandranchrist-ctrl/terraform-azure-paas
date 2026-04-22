@@ -1,0 +1,296 @@
+===== application_rules.tf =====
+locals {
+  application_rule_collections = [
+    {
+      name     = "allow-business-apps"
+      priority = 100
+      action   = "Allow"
+
+      rules = [
+        {
+          name             = "allow-azure-services"
+          enabled          = true
+          source_addresses = var.all_vm_cidrs
+          destination_fqdns = [
+            "*.microsoft.com",
+            "*.azure.com",
+            "*.windows.net"
+          ]
+        },
+        {
+          name             = "allow-dev-tools"
+          enabled          = true
+          source_addresses = var.all_vm_cidrs
+          destination_fqdns = [
+            "login.github.com",
+            "*.visualstudio.com",
+            "*.vscode.dev"
+          ]
+        },
+        {
+          name             = "allow-package-repos"
+          enabled          = true
+          source_addresses = var.all_vm_cidrs
+          destination_fqdns = [
+            "registry.npmjs.org",
+            "pypi.org",
+            "*.docker.com"
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+===== fwpolicy.tf =====
+resource "azurerm_firewall_policy" "fwpolicy" {
+  name                = "${var.env}-fwpolicy"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  tags                = var.tags
+
+  sku = var.sku
+}
+
+resource "azurerm_firewall_policy_rule_collection_group" "main" {
+  name               = "${var.env}-fw-rcg"
+  firewall_policy_id = azurerm_firewall_policy.fwpolicy.id
+  priority           = 100
+
+  ##################################
+  # NETWORK RULE COLLECTIONS
+  ##################################
+  dynamic "network_rule_collection" {
+    for_each = [
+      for c in local.network_rule_collections :
+      c if length([for r in c.rules : r if r.enabled]) > 0
+    ]
+
+    content {
+      name     = network_rule_collection.value.name
+      priority = network_rule_collection.value.priority
+      action   = network_rule_collection.value.action
+
+      dynamic "rule" {
+        for_each = [
+          for r in network_rule_collection.value.rules : r if r.enabled
+        ]
+
+        content {
+          name                  = rule.value.name
+          source_addresses      = rule.value.source_addresses
+          destination_addresses = rule.value.destination_addresses
+          destination_ports     = rule.value.destination_ports
+          protocols             = rule.value.protocols
+        }
+      }
+    }
+  }
+
+  ##################################
+  # APPLICATION RULE COLLECTIONS
+  ##################################
+  dynamic "application_rule_collection" {
+    for_each = [
+      for c in local.application_rule_collections :
+      c if length([for r in c.rules : r if r.enabled]) > 0
+    ]
+
+    content {
+      name     = application_rule_collection.value.name
+      priority = application_rule_collection.value.priority
+      action   = application_rule_collection.value.action
+
+      dynamic "rule" {
+        for_each = [
+          for r in application_rule_collection.value.rules : r if r.enabled
+        ]
+
+        content {
+          name             = rule.value.name
+          source_addresses = rule.value.source_addresses
+
+          protocols {
+            type = "Http"
+            port = 80
+          }
+
+          protocols {
+            type = "Https"
+            port = 443
+          }
+
+          destination_fqdns = rule.value.destination_fqdns
+        }
+      }
+    }
+  }
+
+  ##################################
+  # NAT RULE COLLECTIONS
+  ##################################
+  dynamic "nat_rule_collection" {
+    for_each = [
+      for c in local.nat_rule_collections :
+      c if length([for r in c.rules : r if r.enabled]) > 0
+    ]
+
+    content {
+      name     = nat_rule_collection.value.name
+      priority = nat_rule_collection.value.priority
+      action   = nat_rule_collection.value.action
+
+      dynamic "rule" {
+        for_each = [
+          for r in nat_rule_collection.value.rules : r if r.enabled
+        ]
+
+        content {
+          name                = rule.value.name
+          source_addresses    = rule.value.source_addresses
+          destination_address = rule.value.destination_address
+          destination_ports   = rule.value.destination_ports
+          # translated_address  = rule.value.translated_address
+
+          translated_address = length(var.vm_private_ips) > 0 ? var.vm_private_ips[0] : null
+
+          translated_port = rule.value.translated_port
+          protocols       = rule.value.protocols
+        }
+      }
+    }
+  }
+}
+
+===== nat_rules.tf =====
+locals {
+  nat_rule_collections = var.enable_public_ip ? [
+    {
+      name     = "web-nat"
+      priority = 400
+      action   = "Dnat"
+      rules = [
+        {
+          name                = "http-to-web"
+          enabled             = true
+          source_addresses    = ["*"]
+          destination_address = var.firewall_public_ip
+          destination_ports   = ["80"]
+          translated_address  = var.vm_private_ips # "10.2.1.70"
+          translated_port     = "80"
+          protocols           = ["TCP"]
+        },
+        {
+          name                = "https-to-web"
+          enabled             = true
+          source_addresses    = ["*"]
+          destination_address = var.firewall_public_ip
+          destination_ports   = ["443"]
+          translated_address  = var.vm_private_ips # "10.2.1.70"
+          translated_port     = "443"
+          protocols           = ["TCP"]
+        }
+      ]
+    }
+  ] : []
+}
+
+===== network_rules.tf =====
+locals {
+  network_rule_collections = [
+    {
+      name     = "network-deny"
+      priority = 100
+      action   = "Deny"
+      rules = [
+        {
+          name                  = "Block-Google-DNS"
+          enabled               = false
+          source_addresses      = var.all_vm_cidrs
+          destination_addresses = ["8.8.8.8"]
+          destination_ports     = ["53"]
+          protocols             = ["TCP", "UDP"]
+        }
+      ]
+    },
+    {
+      name     = "network-allow"
+      priority = 200
+      action   = "Allow"
+      rules = [
+        {
+          name                  = "Allow-DNS"
+          enabled               = true
+          source_addresses      = var.all_vm_cidrs
+          destination_addresses = ["*"]
+          destination_ports     = ["53"]
+          protocols             = ["TCP", "UDP"]
+        },
+        {
+          name                  = "Allow-Internet"
+          enabled               = false
+          source_addresses      = var.all_vm_cidrs
+          destination_addresses = ["0.0.0.0/0"]
+          destination_ports     = ["80", "443"]
+          protocols             = ["TCP"]
+        }
+      ]
+    }
+  ]
+}
+
+===== outputs.tf =====
+output "policy_id" {
+  value       = azurerm_firewall_policy.fwpolicy.id
+  description = "Firewall Policy ID"
+}
+
+output "policy_name" {
+  value       = azurerm_firewall_policy.fwpolicy.name
+  description = "Firewall Policy Name"
+}
+
+===== variables.tf =====
+variable "env" {
+  type = string
+}
+
+variable "resource_group_name" {
+  type = string
+}
+
+variable "location" {
+  type = string
+}
+
+variable "tags" {
+  type    = map(string)
+  default = {}
+}
+
+# Firewall Policy related Variables
+variable "all_vm_cidrs" {
+  type        = list(string)
+  description = "List of CIDRs for VM subnets / sources"
+}
+
+variable "enable_public_ip" {
+  type        = bool
+  description = "Enable Public IP for Azure Firewall (controls NAT rules)"
+  default     = true
+}
+
+variable "sku" {
+  type = string
+}
+
+variable "firewall_public_ip" {
+  type = string
+}
+
+variable "vm_private_ips" {
+  description = "List of VM private IPs for NAT rule translations"
+  type        = list(string)
+  default     = []
+}
+
