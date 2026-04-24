@@ -12,7 +12,7 @@ locals {
       rules = [
         {
           name             = "allow-azure-services"
-          enabled          = true /* Only creates rules if enabled = true */
+          enabled          = false /* Only creates rules if enabled = true */
           source_addresses = var.all_vm_cidrs
           destination_fqdns = [
             "*.microsoft.com",
@@ -22,7 +22,7 @@ locals {
         },
         {
           name             = "allow-dev-tools"
-          enabled          = true
+          enabled          = false
           source_addresses = var.all_vm_cidrs
           destination_fqdns = [
             "login.github.com",
@@ -32,7 +32,7 @@ locals {
         },
         {
           name             = "allow-package-repos"
-          enabled          = true
+          enabled          = false
           source_addresses = var.all_vm_cidrs
           destination_fqdns = [
             "registry.npmjs.org",

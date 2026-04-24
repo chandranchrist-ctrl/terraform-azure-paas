@@ -88,6 +88,11 @@ variable "tde_key_name" {
   default = "sql-tde-key"
 }
 
+variable "acr_key_name" {
+  type    = string
+  default = "acr-cmk-key"
+}
+
 
 # Monitoring
 variable "audit_storage_account_name" {
@@ -103,4 +108,19 @@ variable "create_access_policy_me" {
   description = "Create access policy for current user"
   type        = bool
   default     = false
+}
+
+variable "enable_private_endpoint" {
+  type    = bool
+  default = false
+}
+
+variable "private_subnet_id" {
+  type    = string
+  default = null
+}
+
+variable "private_dns_zone_id" {
+  type    = string
+  default = null
 }

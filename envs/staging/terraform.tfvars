@@ -1,10 +1,10 @@
-subscription_id = "bba50cea-1f5a-47ac-936a-57ba228b336d"
+subscription_id = "e5e41cc7-7577-47be-a02d-3294887037d2"
 
 storage_accounts = {
-  sa1 = "uatstorageaccdiag30"
+  sa1 = "uatbkspstgeaccdiag01"
   # sa2 = "uatstorageaccsqllogs06"
 }
 
-sql_logs_storage_account_name = "uatstorageaccsqllogs21"
+sql_logs_storage_account_name = "uatbkspstgaccsqllogs01"
 
-key_vault_name = "uat-hotel-kv-30"
+key_vault_name = "uat-bookshop-kv-01"

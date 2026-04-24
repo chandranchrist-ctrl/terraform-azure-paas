@@ -2,8 +2,8 @@
 locals {
   route_definitions = [
     {
-      name        = "spoke-app"
-      subnet_keys = ["app"] /* applies RT to app subnet */
+      name        = "hub-jumpbox"
+      subnet_keys = ["jumpbox"] /* applies RT to jumpbox subnet; makesure to provide the same name as subnet*/
       routes = [
         {
           name                = "internet-via-fw"

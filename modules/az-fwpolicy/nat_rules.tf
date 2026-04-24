@@ -10,7 +10,7 @@ locals {
       rules = [
         {
           name                = "http-to-web"
-          enabled             = true /* Only creates rules if enabled = true */
+          enabled             = false /* Only creates rules if enabled = true */
           source_addresses    = ["*"]
           destination_address = var.firewall_public_ip
           destination_ports   = ["80"]
@@ -20,7 +20,7 @@ locals {
         },
         {
           name                = "https-to-web"
-          enabled             = true
+          enabled             = false
           source_addresses    = ["*"]
           destination_address = var.firewall_public_ip
           destination_ports   = ["443"]

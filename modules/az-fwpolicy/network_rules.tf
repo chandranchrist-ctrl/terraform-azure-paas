@@ -32,7 +32,7 @@ locals {
         },
         {
           name                  = "Allow-Internet"
-          enabled               = false
+          enabled               = true
           source_addresses      = var.all_vm_cidrs
           destination_addresses = ["0.0.0.0/0"]
           destination_ports     = ["80", "443"]

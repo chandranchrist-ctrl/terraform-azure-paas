@@ -7,6 +7,14 @@ variable "database_name" {
   type = string
 }
 
+variable "env" {
+  type = string
+}
+
+variable "workload" {
+  type = string
+}
+
 variable "resource_group_name" {
   type = string
 }
@@ -81,11 +89,6 @@ variable "sql_secret_name" {
 variable "enable_tde" {
   type    = bool
   default = true
-}
-
-variable "use_cmk_tde" {
-  type    = bool
-  default = false
 }
 
 variable "key_vault_key_id" {
@@ -236,6 +239,11 @@ variable "app_subnet_id" {
 }
 
 variable "enable_service_endpoint_mssql" {
+  type    = bool
+  default = false
+}
+
+variable "use_cmk_tde" {
   type    = bool
   default = false
 }

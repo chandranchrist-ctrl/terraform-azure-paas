@@ -1,10 +1,12 @@
 terraform {
-  backend "azurerm" {
-    resource_group_name  = "tfstate-rg"
-    storage_account_name = "uatstatehoteltf16"
-    container_name       = "tfstate"
-    key                  = "staging.terraform.tfstate"
-  }
+  # backend "azurerm" {
+  #   resource_group_name  = "tfstate-rg"
+  #   storage_account_name = "uattfstatebookshop01"
+  #   container_name       = "tfstate"
+  #   key                  = "staging.terraform.tfstate"
+  # }
+
+  backend "local" {}
 
   required_providers {
     azurerm = {
@@ -22,7 +24,7 @@ provider "azurerm" {
 # Local values for environment-specific naming
 locals {
   env      = "uat"
-  workload = "hotel"
+  workload = "bookshop"
 }
 
 # Reusable module to create Resource Group
@@ -61,8 +63,9 @@ module "virtual_network" {
   # VNet CIDR
   /* {VNet key = hub\spoke} must match the corresponding key in subnet_address_space to map subnets to the correct VNet */
   vnet_address_space = {
-    hub   = ["10.0.0.0/16"]
-    spoke = ["10.1.0.0/16"]
+    hub = ["10.0.0.0/16"]
+    fe  = ["10.1.0.0/16"]
+    be  = ["172.21.0.0/16"]
   }
 
   # Subnet CIDR
@@ -74,31 +77,51 @@ module "virtual_network" {
         tags = { type = "infra" }
       }
 
-      AppGatewaySubnet = {
-        cidr = ["10.0.2.0/24"]
-        tags = { type = "infra" }
-      }
+      # AppGatewaySubnet = {
+      #   cidr = ["10.0.2.0/24"]
+      #   tags = { type = "infra" }
+      # }
 
       AzureFirewallManagementSubnet = {
-        cidr = ["10.0.3.0/26"]
+        cidr = ["10.0.0.64/26"]
         tags = { type = "infra" }
       }
 
       AzureBastionSubnet = {
-        cidr = ["10.0.4.0/26"]
+        cidr = ["10.0.0.128/26"]
         tags = { type = "infra" }
+      }
+
+      jumpbox = {
+        cidr = ["10.0.1.0/27"]
+        tags = { type = "workload" }
       }
     }
 
-    spoke = {
+    fe = {
       app = {
         cidr = ["10.1.1.64/26"]
         tags = { type = "workload" }
+      },
+      private_endpoint_fe = {
+        cidr = ["10.1.2.0/27"]
+        tags = { type = "infra" }
       }
 
-      db = {
-        cidr = ["10.1.1.128/26"]
+    }
+
+    be = {
+      aks = {
+        cidr = ["172.21.0.0/22"]
         tags = { type = "workload" }
+      }
+      db = {
+        cidr = ["172.21.4.0/26"]
+        tags = { type = "workload" }
+      }
+      private_endpoint_be = {
+        cidr = ["172.21.5.0/27"]
+        tags = { type = "infra" }
       }
     }
   }
@@ -111,22 +134,68 @@ module "vnet_peering" {
 
 
   peerings = {
-    hub_to_spoke = {
-      name                    = "${local.env}-hub-to-spoke"
-      resource_group          = module.rg.resource_group_name
-      vnet_name               = module.virtual_network.vnets["hub"].name
-      remote_vnet_id          = module.virtual_network.vnets["spoke"].id
-      allow_vnet_access       = true
+    hub_to_fe = {
+      name              = "${local.env}-hub-to-fe"
+      resource_group    = module.rg.resource_group_name
+      vnet_name         = module.virtual_network.vnets["hub"].name
+      remote_vnet_id    = module.virtual_network.vnets["fe"].id
+      allow_vnet_access = true
+      # Enables transit traffic via Hub (Spoke → Hub → Spoke)
       allow_forwarded_traffic = true
       allow_gateway_transit   = false
       use_remote_gateways     = false
     },
-    spoke_to_hub = {
-      name                    = "${local.env}-spoke-to-hub"
-      resource_group          = module.rg.resource_group_name
-      vnet_name               = module.virtual_network.vnets["spoke"].name
-      remote_vnet_id          = module.virtual_network.vnets["hub"].id
-      allow_vnet_access       = true
+    vnet-app_db_to_vnet-hub = {
+      name              = "${local.env}-fe-to-hub"
+      resource_group    = module.rg.resource_group_name
+      vnet_name         = module.virtual_network.vnets["fe"].name
+      remote_vnet_id    = module.virtual_network.vnets["hub"].id
+      allow_vnet_access = true
+      # Enables transit traffic via Hub (Spoke → Hub → Spoke)
+      allow_forwarded_traffic = true
+      allow_gateway_transit   = false
+      use_remote_gateways     = false
+    },
+    hub_to_be = {
+      name              = "${local.env}-hub-to-be"
+      resource_group    = module.rg.resource_group_name
+      vnet_name         = module.virtual_network.vnets["hub"].name
+      remote_vnet_id    = module.virtual_network.vnets["be"].id
+      allow_vnet_access = true
+      # Enables transit traffic via Hub (Spoke → Hub → Spoke)
+      allow_forwarded_traffic = true
+      allow_gateway_transit   = false
+      use_remote_gateways     = false
+    },
+    be_to_hub = {
+      name              = "${local.env}-be-to-hub"
+      resource_group    = module.rg.resource_group_name
+      vnet_name         = module.virtual_network.vnets["be"].name
+      remote_vnet_id    = module.virtual_network.vnets["hub"].id
+      allow_vnet_access = true
+      # Enables transit traffic via Hub (Spoke → Hub → Spoke)
+      allow_forwarded_traffic = true
+      allow_gateway_transit   = false
+      use_remote_gateways     = false
+    },
+    fe_to_be = {
+      name              = "${local.env}-fe-to-be"
+      resource_group    = module.rg.resource_group_name
+      vnet_name         = module.virtual_network.vnets["fe"].name
+      remote_vnet_id    = module.virtual_network.vnets["be"].id
+      allow_vnet_access = true
+      # Enables transit traffic via Hub (Spoke → Hub → Spoke)
+      allow_forwarded_traffic = true
+      allow_gateway_transit   = false
+      use_remote_gateways     = false
+    },
+    be_to_fe = {
+      name              = "${local.env}-be-to-fe"
+      resource_group    = module.rg.resource_group_name
+      vnet_name         = module.virtual_network.vnets["be"].name
+      remote_vnet_id    = module.virtual_network.vnets["fe"].id
+      allow_vnet_access = true
+      # Enables transit traffic via Hub (Spoke → Hub → Spoke)
       allow_forwarded_traffic = true
       allow_gateway_transit   = false
       use_remote_gateways     = false
@@ -164,6 +233,7 @@ module "storage_account" {
   /* Only allow private network access (recommended) */
   allowed_subnet_ids = [
     module.virtual_network.subnet_lookup["app"],
+    module.virtual_network.subnet_lookup["aks"],
     module.virtual_network.subnet_lookup["db"]
   ]
 
@@ -202,7 +272,6 @@ module "sql_logs_storage_account" {
   allowed_ip_rules = ["49.37.211.249"]
 
   allowed_subnet_ids = [
-    module.virtual_network.subnet_lookup["app"],
     module.virtual_network.subnet_lookup["db"]
   ]
 
@@ -230,111 +299,6 @@ module "sql_logs_storage_account" {
       days   = 7
     }
   ]
-}
-
-
-# Security - Key Vault
-module "key_vault" {
-  source = "../../modules/az-keyvault"
-
-  name = var.key_vault_name /* "${local.env}-${local.workload}-kv-17" = Key Vault names must be globally unique across Azure. */
-
-  location            = module.rg.resource_group_location
-  resource_group_name = module.rg.resource_group_name
-  tags                = module.rg.tags
-
-  /* false = uses access policies, true = uses RBAC */
-  rbac_authorization_enabled = false
-
-  /* true = creates access for current user, false = no access policy */
-  create_access_policy_me = true
-
-  /* standard = basic features, premium = supports HSM-backed keys */
-  sku_name = "standard" # Standard or Premium
-
-  soft_delete_retention_days = 7 /* days to retain deleted items (7–90) */
-  purge_protection_enabled   = false /* true = prevents permanent deletion, false = allows purge */
-
-  enabled_for_deployment          = true /* true = allows VM deployment access */
-  enabled_for_template_deployment = true /* true = allows ARM template access */
-
-
-  public_network_access_enabled = true /* true = allows public access, false = private only */
-
-  network_acls_default_action = "Deny" /* Deny = block all except allowed, Allow = open access */
-  allowed_ip_ranges           = ["49.37.211.249/32"] /* allowed public IPs */
-
-  /*   For subnet restrictions, ensure the subnets exist and are correctly referenced.
-  service_endpoints = ["Microsoft.KeyVault"] is enabled on those subnets in the network module. */
-  allowed_subnet_ids = [
-    module.virtual_network.subnet_lookup["app"],
-    module.virtual_network.subnet_lookup["db"],
-    module.virtual_network.subnet_lookup["AppGatewaySubnet"]
-  ]
-
-  # Security - SSH Key
-  /* stores SSH public key as secret */
-  ssh_secret_name = "linux-ssh-public-key"
-  ssh_public_key  = file("${path.module}/ssh/id_rsa.pub")
-
-  # Security - Secrets
-  /* key-value secrets stored in Key Vault */
-  secrets = {
-    localadmin-credentials = jsonencode({
-      admin-username = "HBAdmin",
-      admin-password = "Qwerty123!",
-    })
-
-    mssql-credentials = jsonencode({
-      username = "sqladmin"
-      password = "SQLP@ssword!23!"
-    })
-  }
-
-  # Security - Certificates
-  /* imports certificates from PFX */
-  certificates = [
-    {
-      name     = "wildcard-cert"
-      pfx_path = "./certs/certificate.pfx"
-      password = "Y12345Z"
-    }
-  ]
-
-  # Monitoring - Diagnostics
-  audit_storage_account_name = module.storage_account["sa1"].storage_account_name /* Ex. "kvlogstorage" to declare the name directly */
-  audit_storage_account_rg   = module.rg.resource_group_name
-
-  # depends_on ensures storage account is created before enabling diagnostics
-  depends_on = [module.storage_account]
-}
-
-# Network - Private DNS
-module "private_dns" {
-  source = "../../modules/az-dns/private"
-
-  resource_group_name = module.rg.resource_group_name
-
-  /* list of private DNS zones to create */
-  zones = [
-    "privatelink.database.windows.net",
-    "privatelink.blob.core.windows.net",
-    "privatelink.vaultcore.azure.net"
-  ]
-
-  /* VNets to link with DNS zones for name resolution */
-  vnet_ids = [
-    module.virtual_network.vnets["hub"].id,
-    module.virtual_network.vnets["spoke"].id
-  ]
-
-  /* Alternative Declaration {vnet_ids}: dynamically fetch all VNet IDs from module output;
-Use when you want to link DNS to all VNets automatically (no manual selection needed);
-Not needed if only specific VNets (e.g., hub/spoke) should be linked */
-
-  /*   vnet_ids = [
-    for v in module.virtual_network.vnets : v.id
-  ] */
 }
 
 # Network - Route Tables
@@ -399,17 +363,15 @@ module "fw_policy" {
 
   sku = "Basic" /* Basic = limited features, Standard/Premium = advanced filtering */
 
-  all_vm_cidrs = concat(["10.1.1.64/26"]) /* source CIDRs for firewall rules */
+  all_vm_cidrs = concat(["10.0.1.0/27"]) /* source CIDRs for firewall rules */
 
   firewall_public_ip = module.firewall.firewall_pip /* used in NAT rules */
 
   /* target VM IPs for DNAT */
   vm_private_ips = flatten([
-    # module.linux_vm.private_ip,
-    module.windows_vm.private_ip
+    module.jumpbox_linux_vm.private_ip
   ])
 }
-
 
 # Network Security - Azure Bastion
 module "bastion" {
@@ -436,90 +398,10 @@ module "bastion" {
 }
 
 
-# Windows VM Deployment Module
-/* Creates one or more Windows VMs with networking, disks, identity, and optional integrations (LB, ASG, Backup, Diagnostics) */
-module "windows_vm" {
-  source = "../../modules/az-compute/windows_vm"
-
-  env      = local.env
-  workload = local.workload
-
-  resource_group_name = module.rg.resource_group_name
-  location            = module.rg.resource_group_location
-  tags                = module.rg.tags
-
-  vm_name  = "${local.env}-${local.workload}-ap"
-  vm_count = 1
-
-  vm_size   = "Standard_B2s"
-  image_sku = "2019-datacenter-gensecond"
-
-  subnet_id = module.virtual_network.subnet_lookup["app"]
-
-  private_ip_allocation = "Dynamic"
-
-  os_disk_storage_type = "Standard_LRS"
-  os_disk_size_gb      = 127
-
-  enable_public_ip = false /* true  → VM gets public IP (direct internet access) */
-
-  enable_availability_set = false /* true  → VMs distributed across fault/update domains (HA within region) */
-  availability_set_name   = "biztalk-avset"
-
-  zones = null /* ["1","2","3"] → zone-based high availability; null/empty → no zone (regional deployment) */
-
-  # Controls boot diagnostics storage
-  enable_boot_diagnostics               = true
-  boot_diagnostics_mode                 = "existing" /* "none", "existing", or "create" */
-  boot_diagnostics_storage_account_name = module.storage_account["sa1"].storage_account_name
-
-
-  /*Fetches admin credentials from Key Vault instead of hardcoding
-  Helps secure VM username/password */
-  key_vault_id                       = module.key_vault.key_vault_id /* change manually when needed; ensure this KV exists and has the necessary secrets for admin username and password */
-  localadmin_credentials_secret_name = "localadmin-credentials"
-
-  enable_asg = false
-
-  # enable_lb = false                       /* true  → attaches VM NICs to Load Balancer backend pool */
-
-  # Scenario 1: Existing LB
-  # lb_name              = "existing-lb-name"
-  # lb_backend_pool_name = "backend-pool-name"
-
-  # Scenario 2: New LB scenario (created in same Terraform)
-  # lb_backend_pool_id = module.loadbalancer.backend_pool_id
-
-  license_type = "Windows_Server" # "Windows_Server", "RHEL", "SLES", "Windows_Client"; adjust based on your image and licensing needs
-
-  data_disks = [
-    {
-      size_gb      = 127
-      lun          = 0
-      caching      = "ReadWrite"
-      storage_type = "Standard_LRS"
-    }
-  ]
-
-  # Backup configuration
-  enable_backup = false /* true  → enables VM backup using Recovery Services Vault */
-
-  # Recovery Serivce Vault Configuration
-  recovery_services_vault_name = "existing-rsv"
-  backup_policy_vm             = "existing-policy"
-
-  # Ensure dependencies are created before VM
-  depends_on = [
-    module.key_vault,
-    module.storage_account
-  ]
-}
-
-
 # Linux VM Deployment Module
 /* Creates one or more Linux VMs with networking, disks, identity, and optional integrations (LB, ASG, Backup, Diagnostics) */
-module "linux_vm" {
-  source = "../../modules/az-compute/linux_vm"
+module "jumpbox_linux_vm" {
+  source = "../../modules/az-compute/linux_vm_jh"
 
   env      = local.env
   workload = local.workload
@@ -528,13 +410,13 @@ module "linux_vm" {
   location            = module.rg.resource_group_location
   tags                = module.rg.tags
 
-  vm_name  = "${local.env}-nginx-lnx"
+  vm_name  = "${local.env}-jumpbox-lnx"
   vm_count = 1
 
   vm_size   = "Standard_B2s"
   image_sku = "18.04-LTS"
 
-  subnet_id = module.virtual_network.subnet_lookup["app"]
+  subnet_id = module.virtual_network.subnet_lookup["jumpbox"]
 
   private_ip_allocation = "Dynamic"
 
@@ -602,8 +484,127 @@ module "linux_vm" {
   ]
 }
 
+
+
+# Security - Key Vault
+module "key_vault" {
+  source = "../../modules/az-keyvault"
+
+  name = var.key_vault_name /* "${local.env}-${local.workload}-kv-17" = Key Vault names must be globally unique across Azure. */
+
+  location            = module.rg.resource_group_location
+  resource_group_name = module.rg.resource_group_name
+  tags                = module.rg.tags
+
+  /* false = uses access policies, true = uses RBAC */
+  rbac_authorization_enabled = false
+
+  /* true = creates access for current user, false = no access policy */
+  create_access_policy_me = true
+
+  /* standard = basic features, premium = supports HSM-backed keys */
+  sku_name = "standard" # Standard or Premium
+
+  soft_delete_retention_days = 7 /* days to retain deleted items (7–90) */
+  purge_protection_enabled   = false /* true = prevents permanent deletion, false = allows purge */
+
+  enabled_for_deployment          = true /* true = allows VM deployment access */
+  enabled_for_template_deployment = true /* true = allows ARM template access */
+
+  enable_private_endpoint = true
+  private_subnet_id       = module.virtual_network.subnet_lookup["private_endpoint_be"]
+  private_dns_zone_id     = module.private_dns.zone_ids["privatelink.vaultcore.azure.net"]
+
+  public_network_access_enabled = true /* true = allows public access, false = private only */
+
+  network_acls_default_action = "Deny" /* Deny = block all except allowed, Allow = open access */
+  allowed_ip_ranges           = ["49.37.209.71/32"] /* allowed public IPs */
+
+  /*   For subnet restrictions, ensure the subnets exist and are correctly referenced.
+  service_endpoints = ["Microsoft.KeyVault"] is enabled on those subnets in the network module. */
+  allowed_subnet_ids = [
+    module.virtual_network.subnet_lookup["app"],
+    module.virtual_network.subnet_lookup["aks"],
+    module.virtual_network.subnet_lookup["db"]
+  ]
+
+  # Security - SSH Key
+  /* stores SSH public key as secret */
+  ssh_secret_name = "linux-ssh-public-key"
+  ssh_public_key  = file("${path.module}/ssh/id_rsa.pub")
+
+  # Security - Secrets
+  /* key-value secrets stored in Key Vault */
+  secrets = {
+    localadmin-credentials = jsonencode({
+      admin-username = "HBAdmin",
+      admin-password = "Qwerty123!",
+    })
+
+    mssql-credentials = jsonencode({
+      username = "sqladmin"
+      password = "SQLP@ssword!23!"
+    })
+
+    # acr-credentials = jsonencode({
+    #   username = "acradmin"
+    #   password = "QwsxDr54!2r"
+    # })
+  }
+
+  # Security - Certificates
+  /* imports certificates from PFX */
+  certificates = [
+    {
+      name     = "wildcard-cert"
+      pfx_path = "./certs/certificate.pfx"
+      password = "Y12345Z"
+    }
+  ]
+
+  # Monitoring - Diagnostics
+  audit_storage_account_name = module.storage_account["sa1"].storage_account_name /* Ex. "kvlogstorage" to declare the name directly */
+  audit_storage_account_rg   = module.rg.resource_group_name
+
+  # depends_on ensures storage account is created before enabling diagnostics
+  depends_on = [module.storage_account]
+}
+
+# Network - Private DNS
+module "private_dns" {
+  source = "../../modules/az-dns/private"
+
+  resource_group_name = module.rg.resource_group_name
+
+  /* list of private DNS zones to create */
+  zones = [
+    "privatelink.database.windows.net",
+    "privatelink.blob.core.windows.net",
+    "privatelink.vaultcore.azure.net",
+    "privatelink.azurecr.io"
+  ]
+
+  /* VNets to link with DNS zones for name resolution */
+  vnet_ids = [
+    module.virtual_network.vnets["hub"].id,
+    module.virtual_network.vnets["fe"].id,
+    module.virtual_network.vnets["be"].id
+  ]
+
+  /* Alternative Declaration {vnet_ids}: dynamically fetch all VNet IDs from module output;
+Use when you want to link DNS to all VNets automatically (no manual selection needed);
+Not needed if only specific VNets (e.g., hub/spoke) should be linked */
+
+  /*   vnet_ids = [
+    for v in module.virtual_network.vnets : v.id
+  ] */
+}
+
 module "mssql" {
   source = "../../modules/az-compute/rds/mssql"
+
+  env      = local.env
+  workload = local.workload
 
   # Basic Identity
   server_name   = "${local.env}-${local.workload}-sql1"
@@ -654,16 +655,16 @@ module "mssql" {
   # Network Mode (UAT/PROD toggle)
   enable_public_access    = true # PROD → false (private only), UAT → can be true if needed
   enable_private_endpoint = true
-  private_subnet_id       = module.virtual_network.subnet_lookup["db"]
+  private_subnet_id       = module.virtual_network.subnet_lookup["private_endpoint_be"]
   private_dns_zone_id     = module.private_dns.zone_ids["privatelink.database.windows.net"]
 
   # Service Endpoint
   enable_service_endpoint_mssql = true
-  app_subnet_id                 = module.virtual_network.subnet_lookup["app"]
+  app_subnet_id                 = module.virtual_network.subnet_lookup["db"]
 
-  allowed_ips = ["49.37.211.249"] # only used if public enabled
+  allowed_ips = ["49.37.209.71"] # only used if public enabled
 
-  # TDE (Encryption)
+  # TDE (Encryption) /* false = system managed key */
   enable_tde       = false
   use_cmk_tde      = false
   key_vault_key_id = null
@@ -721,174 +722,80 @@ module "mssql" {
   ]
 }
 
-module "appgw" {
-  source = "../../modules/az-applicationgateway"
+module "acr" {
+  source = "../../modules/az-acr"
 
+  # Basic Identity
   env      = local.env
   workload = local.workload
 
+  acr_name            = "${local.env}${local.workload}acr"
   resource_group_name = module.rg.resource_group_name
   location            = module.rg.resource_group_location
   tags                = module.rg.tags
 
-  # appgw Public IP
-  allocation_method = "Static"
-  sku               = "Standard"
+  # SKU (Critical Control)
+  /* Allowed: Basic | Standard | Premium (case-sensitive) */
+  sku = "Basic"
 
-  # SKU configuration for Application Gateway
-  sku_name     = "Standard_v2" # The SKU name (Standard_v2, WAF_v2, etc.)
-  sku_tier     = "Standard_v2" # The SKU tier (Standard_v2, WAF_v2)
-  sku_capacity = 1             # Capacity: Number of instances for the gateway 
+  # Access Control
+  admin_enabled = false
 
 
-  ssl_cert_password = "Y12345Z"
 
-  # key_vault_id = module.key_vault.key_vault_id
-  # ssl_cert_secret_id = module.key_vault.certificate_secret_ids["wildcard-cert"]
+  # WARNING:
+  /* Public access enabled for UAT/debugging.
+  Set false in PROD when using Private Endpoint only. */
+  public_network_access_enabled = true
 
-  # Frontend IP Configuration
-  enable_public_ip = true # set to false to create internal-only App Gateway without public IP
+  allowed_ips = ["49.37.209.71"]
+
+  identity_type = "SystemAssigned"
+
+  # Networking Features
+  /* Note:
+     These features are PREMIUM-only in real Azure behavior; Keep "true" only if premimum SKU is used.
+     Validation in module should block invalid SKU usage. */
+  #---
+  /* If enabled (true), identity must be "UserAssigned" for Key Vault CMK integration */
+  enable_cmk = false
+
+  /* Key Vault Key ID used for CMK encryption (Premium only).
+  Set only when enable_cmk = true, otherwise keep null */
+  acr_cmk_id = null
 
 
-  enable_private_ip     = true
-  subnet_id             = module.virtual_network.subnet_lookup["AppGatewaySubnet"] # Subnet ID where the Application Gateway will be deployed 
-  private_ip_allocation = "Static"                                                 # Private IP allocation type for Application Gateway frontend (Dynamic or Static)
-  private_ip_address    = "10.0.2.50"
+  /* enable below id only in Premium CMK setup: */
+  # acr_cmk_id = module.key_vault.acr_cmk_id 
 
 
-  # Required variables for routing modules
-  frontend_ip_name   = "${local.env}-appgw-fe-ip"
-  frontend_port_name = "${local.env}-appgw-fe-port"
-  port               = 443 # Port number for incoming traffic (e.g., 80 for HTTP, 443 for HTTPS).
-  port_http          = 80  # Port number for incoming traffic (e.g., 80 for HTTP, 443 for HTTPS).
+  enable_data_endpoint  = false
+  enable_georeplication = false
 
-  # Direct Pass (NO locals block required)
-  backend_ips = flatten([
-    # module.linux_vm.private_ip
-    module.windows_vm.private_ip
-  ])
+  enable_private_endpoint = false
+  private_subnet_id       = module.virtual_network.subnet_lookup["private_endpoint_be"]
+  private_dns_zone_id     = module.private_dns.zone_ids["privatelink.azurecr.io"]
+
+  zone_redundancy_enabled = false
+  #---
+  /* Image Lifecycle: Cleanup of untagged images only */
+  enable_retention_policy = false
+  retention_days          = 7
+
+  # Security Policies
+  export_policy_enabled  = true /* Controls whether ACR images can be exported to external storage (e.g., Azure Blob for backup/archival) */
+  anonymous_pull_enabled = false /* Allows unauthenticated (public) pull access to container images when enabled */
+
+  # Identity-based access (future)
+  enable_token       = true /* Enables ACR token-based authentication for fine-grained access control using scope maps */
+  key_vault_id_token = module.key_vault.key_vault_id
+
+  # Slack / Teams / CI pipeline hook
+  enable_webhook = false /* Enables ACR webhook notifications for events like image push/pull (e.g., Slack/CI/CD integration) */
+  webhook_uri    = "https://hooks.slack.com/services/XXXX" /*  Endpoint URL where ACR sends event notifications when webhook is enabled */
 
   depends_on = [
-    module.key_vault
+    module.virtual_network,
+    module.private_dns
   ]
 }
-
-
-/* Optional  */
-
-/*
-module "loadbalancer" {
-  source = "../../modules/az-loadbalancer"
-
-  env = local.env
-  workload = local.workload
-
-  lb_name = "${local.env}-${local.workload}-lb-pub"           # change to "${local.env}-lb-priv" for private LB
-
-  resource_group_name = module.rg.resource_group_name
-  location            = module.rg.resource_group_location
-  tags                = module.rg.tags
-
-  # Public IP
-  allocation_method = "Static"
-  sku               = "Standard"
-
-  # LB Configuration
-  sku_name         = "Standard"           # Standard or Basic
-  frontend_ip_type = "Public"             # Public or Private;  For Private LB: use a valid subnet output (e.g., spoke/web); update the key if your subnet naming differs.
-  subnet_id        = null                 # Empty means Public LB
-  # subnet_id         = module.virtual_network.subnet_lookup["web"] 
-}
-*/
-
-/*
-module "mysql" {
-  source = "../../modules/az-compute/rds/mysql-flexible"
-
-  env = local.env
-  workload = local.workload
-
-  db_servername = "${local.env}-${local.workload}-db1"
-  db_name = "${local.env}_${local.workload}_db1"
-
-
-  resource_group_name = module.rg.resource_group_name
-  location            = module.rg.resource_group_location
-  tags                = module.rg.tags
-
-  # Server Configuration
-
-  sku_name = "B_Standard_B2s"
-  db_version = "8.4"  
-  zone = null
-
-  # DB Server to be deployed as public or private 
-  enable_private_network = false
-  enable_private_dns = false
-
-  vnet_id = module.virtual_network.vnets["spoke"].id
-  delegated_subnet_id  = module.virtual_network.subnet_lookup["db"]
-
-  # DB allow NACLs from public inbound
-  allowed_ips = ["49.37.211.249"]
-
-  storage_size_gb = 22
-
-
-  # Enable High Availability (HA)
-  enable_ha = false               # false → single instance (no failover); true  → enables standby replica automatically (managed by Azure)
-  ha_mode = "ZoneRedundant"       # HA mode (only used when enable_ha = true); ZoneRedundant → primary + standby in different AZs (best for production); SameZone → primary + standby in same AZ (lower cost, less resilient)
-
-
-  # Key Vault Configuration
-  key_vault_id = module.key_vault.key_vault_id
-  mysql_credentials_secret_name = "mysql-credentials"
-
-
-  # Backup Config
-  backup_retention_days = 7
-  geo_redundant_backup_enabled = false  # Stores backups in: Another Azure region
-
-
-  # Maintenance Window
-  maintenance_day = 5       # Day of week for planned maintenance (Azure patching, updates); maintenance_day = 7   # Sunday
-  maintenance_hour = 1    # Hour of day (UTC) when maintenance starts; # Example: # Range: 0–23; 1 = 01:00 UTC
-
-  enable_diagnostics = true
-  diagnostic_storage_account_id = module.storage_account["sa1"].storage_account_name
-
-  enable_replica   = false
-  replica_location = "Central India"
-
-  # Depends
-  depends_on = [module.key_vault]
-} 
-*/
-
-/* 
-module "firewall_basic" {
-  source = "../../modules/az-firewall-basicsku"
-
-  env = local.env
-
-  resource_group_name = module.rg.resource_group_name
-  location            = module.rg.resource_group_location
-  tags                = module.rg.tags
-
-  # Optional: Public IP allocation and zones
-  allocation_method = "Static"
-  sku               = "Standard"
-
-  #FW Configuration
-  sku_name = "AZFW_VNet"            # Firewall deployed in a Virtual Network (not Secure Hub); Basic SKU only supports AZFW_VNet
-  sku_tier = "Basic"
-  zones    = []
-  firewall_mode = "public"
- 
-  all_vm_cidrs = concat(["10.1.1.0/26"], ["10.1.1.64/26"])
-
-  # Only subnets needed for firewall
-  firewall_subnet_id            = module.virtual_network.subnet_lookup["AzureFirewallSubnet"]
-  firewall_management_subnet_id = module.virtual_network.subnet_lookup["AzureFirewallManagementSubnet"]
-}
- */
