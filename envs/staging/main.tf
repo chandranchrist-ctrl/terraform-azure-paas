@@ -799,3 +799,167 @@ module "acr" {
     module.private_dns
   ]
 }
+
+module "aks" {
+  source = "../../modules/az-compute/aks"
+
+
+  env      = local.env
+  workload = local.workload
+
+  name                = "${local.env}${local.workload}aks"
+  resource_group_name = module.rg.resource_group_name
+  location            = module.rg.resource_group_location
+  tags                = module.rg.tags
+
+  kubernetes_version = "1.29"
+
+  sku_tier = "Standard"
+
+  dns_prefix                 = "${local.env}aks"
+  dns_prefix_private_cluster = "${local.env}aks-private"
+
+  private_cluster_enabled             = true
+  private_cluster_public_fqdn_enabled = false
+  private_dns_zone_id                 = null
+
+  automatic_upgrade_channel = null /* patch/rapid/node-image/stable  */
+  node_os_upgrade_channel   = "None" /* Unmanaged/SecurityPatch/NodeImage/None */
+
+  api_server_access_profile = {
+    authorized_ip_ranges = [/* Set of authorized IP ranges to allow access to API server */
+      "10.0.1.0/27"
+    ]
+  }
+
+  auto_scaler_profile = {
+    /* When multiple node pools are similar (same size/labels), AKS cluster autoscaler tries to distribute scale-out across them instead of scaling only one pool. */
+    balance_similar_node_groups = false
+  }
+
+  aad_rbac = {
+    enabled            = true
+    azure_rbac_enabled = true
+  }
+
+  role_based_access_control_enabled = true
+
+  disk_encryption_set_id = null
+
+  http_application_routing_enabled = false
+
+  identity = {
+    /* AKS cluster managed identity (control plane identity);
+    Used for Azure resource operations (LB, networking, node pools);
+    Azure creates and manages this automatically */
+    type = "SystemAssigned"
+  }
+
+  /* Node (kubelet) managed identity
+  # Used by AKS nodes to access Azure resources
+  # Examples: pull images from ACR, mount disks/files
+  # Empty {} = Azure auto-creates and manages it */
+  kubelet_identity = {}
+
+  /* Forces authentication via Azure AD (Entra ID) instead of static credentials */
+  local_account_disabled = true
+
+  enable_ssh      = true
+  admin_username  = "HBAdmin"
+  ssh_secret_name = "linux-ssh-public-key"
+  key_vault_id    = module.key_vault.key_vault_id
+
+  enable_maintenance_window = true
+
+  enable_defender = false
+
+  defender_workspace_id = null
+  # defender_workspace_id = module.log_analytics.workspace_id
+  # defender_workspace_id = "/subscriptions/xxx/resourceGroups/rg/providers/Microsoft.OperationalInsights/workspaces/ws"
+
+  monitor_metrics = false
+
+  network_profile = {
+    network_plugin = "azure"
+    network_policy = "calico"
+  }
+
+  /* Enables AKS to publish an OIDC identity endpoint for secure token-based authentication */
+  oidc_issuer_enabled = true
+
+  /* Allows pods to use Azure AD Workload Identity to access Azure resources without secrets */
+  workload_identity_enabled = true
+
+  /* Enables Azure Monitor (OMS agent) to collect AKS logs and send them to Log Analytics Workspace */
+  enable_oms_agent           = false
+  log_analytics_workspace_id = null
+  # log_analytics_workspace_id    = module.log_analytics.workspace_id
+
+  storage_profile = {
+    blob_driver_enabled = true
+  }
+
+  support_plan = "KubernetesOfficial"
+
+  run_command_enabled = false
+
+  # NODE POOL (optional inline structure)
+  default_node_pool = {
+    name                 = "system"
+    node_count           = 1
+    vm_size              = "Standard_B2s"
+    auto_scaling_enabled = true
+    min_count            = 1
+    max_count            = 3
+    vnet_subnet_id       = module.virtual_network.subnet_lookup["aks"]
+  }
+
+  # EXTENSIONS
+  extensions = {
+    container-storage = {
+      type = "AzureContainerStorage"
+    }
+
+    backup = {
+      type = "AzureBackup"
+    }
+
+    network-insights = {
+      type = "ContainerNetworkObservability"
+    }
+
+    app-config = {
+      type = "AzureAppConfigurationKubernetesProvider"
+    }
+  }
+
+  acr_id = module.acr.acr_id
+
+  # DEPLOYMENT SAFEGUARD
+  deployment_safeguard = {
+    level = "Warn" /* "Warn"/"Enforce" */
+  }
+
+  # TRUSTED ACCESS
+  enable_trusted_access = false
+  trusted_access = {
+    backup_service = {
+      name               = "backup"
+      source_resource_id = "/subscriptions/xxx/providers/Microsoft.DataProtection/backupVaults/vault1"
+      roles              = ["Microsoft.DataProtection/backupVaults/backup/read"]
+    }
+  }
+
+  # NODE POOLS (extra)
+  node_pools = {
+    workernode = {
+      name                 = "workernode1"
+      vm_size              = "Standard_B2s"
+      node_count           = 1
+      auto_scaling_enabled = true
+      min_count            = 1
+      max_count            = 3
+      vnet_subnet_id       = module.virtual_network.subnet_lookup["aks"]
+    }
+  }
+}
