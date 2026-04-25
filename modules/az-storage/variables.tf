@@ -69,3 +69,8 @@ variable "containers" {
   type    = list(string)
   default = []
 }
+
+variable "enable_sas" {
+  type    = bool
+  default = true
+}

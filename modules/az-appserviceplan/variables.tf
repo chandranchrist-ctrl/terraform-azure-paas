@@ -4,6 +4,10 @@ variable "env" {
   type        = string
 }
 
+variable "workload" {
+  type = string
+}
+
 variable "resource_group_name" {
   description = "Resource group name"
   type        = string
@@ -20,21 +24,19 @@ variable "tags" {
   default     = {}
 }
 
-
-# Voriables related to route table creation
-variable "create_rt" {
-  description = "Flag to create route tables"
-  type        = bool
-  default     = true
+variable "name" {
+  type = string
 }
 
-# Network - Routing
-variable "firewall_ip" {
-  description = "Optional firewall private IP for VirtualAppliance routes"
-  type        = string
-  default     = null
+variable "os_type" {
+  type = string
 }
 
-variable "subnets_map" {
-  type = map(string)
+variable "sku_name" {
+  type = string
+}
+
+variable "zone_balancing_enabled" {
+  type    = bool
+  default = false
 }
