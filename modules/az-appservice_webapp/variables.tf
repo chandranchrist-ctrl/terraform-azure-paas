@@ -1,3 +1,13 @@
+# Core
+variable "env" {
+  description = "Prefix for route table names"
+  type        = string
+}
+
+variable "workload" {
+  type = string
+}
+
 variable "name" {
   type = string
 }

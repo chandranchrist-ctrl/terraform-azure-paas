@@ -309,115 +309,115 @@ module "sql_logs_storage_account" {
 }
 
 # Network Security - Azure Bastion
-# module "bastion" {
-#   source = "../../modules/az-bastion"
+module "bastion" {
+  source = "../../modules/az-bastion"
 
-#   env = local.env
+  env = local.env
 
-#   resource_group_name = module.rg.resource_group_name
-#   location            = module.rg.resource_group_location
-#   tags                = module.rg.tags
+  resource_group_name = module.rg.resource_group_name
+  location            = module.rg.resource_group_location
+  tags                = module.rg.tags
 
-#   subnet_id = module.virtual_network.subnet_lookup["AzureBastionSubnet"] /* dedicated Bastion subnet */
+  subnet_id = module.virtual_network.subnet_lookup["AzureBastionSubnet"] /* dedicated Bastion subnet */
 
-#   sku = "Standard" /* Basic or Standard (Standard = more features) */
+  sku = "Standard" /* Basic or Standard (Standard = more features) */
 
-#   tunneling_enabled  = true /* true = allows native client (SSH/RDP) via Bastion */
-#   ip_connect_enabled = true /* true = connect using private IP */
-#   copy_paste_enabled = true /* true = enable clipboard */
-#   file_copy_enabled  = true /* true = allow file transfer */
+  tunneling_enabled  = true /* true = allows native client (SSH/RDP) via Bastion */
+  ip_connect_enabled = true /* true = connect using private IP */
+  copy_paste_enabled = true /* true = enable clipboard */
+  file_copy_enabled  = true /* true = allow file transfer */
 
-#   zones = null /* null = no zone redundancy, ["1","2","3"] = zone redundant */
+  zones = null /* null = no zone redundancy, ["1","2","3"] = zone redundant */
 
-#   kerberos_enabled = false /* true = enable Kerberos auth, false = disabled */
-# }
+  kerberos_enabled = false /* true = enable Kerberos auth, false = disabled */
+}
 
 
 # Linux VM Deployment Module
 /* Creates one or more Linux VMs with networking, disks, identity, and optional integrations (LB, ASG, Backup, Diagnostics) */
-# module "jumpbox_linux_vm" {
-#   source = "../../modules/az-compute/linux_vm_jh"
+module "jumpbox_linux_vm" {
+  source = "../../modules/az-compute/linux_vm_jh"
 
-#   env      = local.env
-#   workload = local.workload
+  env      = local.env
+  workload = local.workload
 
-#   resource_group_name = module.rg.resource_group_name
-#   location            = module.rg.resource_group_location
-#   tags                = module.rg.tags
+  resource_group_name = module.rg.resource_group_name
+  location            = module.rg.resource_group_location
+  tags                = module.rg.tags
 
-#   vm_name  = "${local.env}-jumpbox-lnx"
-#   vm_count = 1
+  vm_name  = "${local.env}-jumpbox-lnx"
+  vm_count = 1
 
-#   vm_size   = "Standard_B2s"
-#   image_sku = "18.04-LTS"
+  vm_size   = "Standard_B2s"
+  image_sku = "18.04-LTS"
 
-#   subnet_id = module.virtual_network.subnet_lookup["jumpbox"]
+  subnet_id = module.virtual_network.subnet_lookup["jumpbox"]
 
-#   private_ip_allocation = "Dynamic"
+  private_ip_allocation = "Dynamic"
 
-#   os_disk_storage_type = "Standard_LRS"
-#   os_disk_size_gb      = 127
+  os_disk_storage_type = "Standard_LRS"
+  os_disk_size_gb      = 127
 
-#   enable_public_ip = false /* true  → VM gets public IP (direct internet access) */
+  enable_public_ip = false /* true  → VM gets public IP (direct internet access) */
 
-#   enable_availability_set = false /* true  → VMs distributed across fault/update domains (HA within region) */
+  enable_availability_set = false /* true  → VMs distributed across fault/update domains (HA within region) */
 
-#   availability_set_name = "biztalk-avset"
+  availability_set_name = "biztalk-avset"
 
-#   zones = null /* ["1","2","3"] → zone-based high availability; null/empty → no zone (regional deployment) */
+  zones = null /* ["1","2","3"] → zone-based high availability; null/empty → no zone (regional deployment) */
 
-#   enable_boot_diagnostics               = true
-#   boot_diagnostics_mode                 = "existing" /* "none", "existing", or "create" */
-#   boot_diagnostics_storage_account_name = module.storage_account["sa1"].storage_account_name
+  enable_boot_diagnostics               = true
+  boot_diagnostics_mode                 = "existing" /* "none", "existing", or "create" */
+  boot_diagnostics_storage_account_name = module.storage_account["sa1"].storage_account_name
 
-#   /*Fetches admin credentials from Key Vault instead of hardcoding
-#   Helps secure VM username/password */
-#   key_vault_id                       = module.key_vault.key_vault_id # change manually when needed; ensure this KV exists and has the necessary secrets for admin username and password
-#   localadmin_credentials_secret_name = "localadmin-credentials"
+  /*Fetches admin credentials from Key Vault instead of hardcoding
+  Helps secure VM username/password */
+  key_vault_id                       = module.key_vault.key_vault_id # change manually when needed; ensure this KV exists and has the necessary secrets for admin username and password
+  localadmin_credentials_secret_name = "localadmin-credentials"
 
-#   # Authentication method
-#   /* true  → only SSH login (recommended for production)
-#    false → password + SSH allowed */
-#   disable_password_authentication = false
+  # Authentication method
+  /* true  → only SSH login (recommended for production)
+   false → password + SSH allowed */
+  disable_password_authentication = false
 
-#   ssh_public_key_secret_name = "linux-ssh-public-key" /* SSH public key stored in Key Vault */
+  ssh_public_key_secret_name = "linux-ssh-public-key" /* SSH public key stored in Key Vault */
 
-#   enable_asg = false
+  enable_asg = false
 
-#   # enable_lb = false                                         /* true  → attaches VM NICs to Load Balancer backend pool */
+  # enable_lb = false                                         /* true  → attaches VM NICs to Load Balancer backend pool */
 
-#   # Scenario 1: Existing LB
-#   # lb_name              = "existing-lb-name"
-#   # lb_backend_pool_name = "backend-pool-name"
+  # Scenario 1: Existing LB
+  # lb_name              = "existing-lb-name"
+  # lb_backend_pool_name = "backend-pool-name"
 
-#   # Scenario 2: New LB scenario (created in same Terraform)
-#   # lb_backend_pool_id = module.loadbalancer.backend_pool_id        # null
+  # Scenario 2: New LB scenario (created in same Terraform)
+  # lb_backend_pool_id = module.loadbalancer.backend_pool_id        # null
 
-#   # Data disks (optional)
-#   /*
-#   data_disks = [
-#     {
-#       # size_gb = 128
-#       # lun     = 0
-#       # caching = "ReadWrite"
-#       # storage_type = "Standard_LRS"
-#     }
-#   ] 
-#   */
+  # Data disks (optional)
+  /*
+  data_disks = [
+    {
+      # size_gb = 128
+      # lun     = 0
+      # caching = "ReadWrite"
+      # storage_type = "Standard_LRS"
+    }
+  ] 
+  */
 
-#   # Backup configuration
-#   enable_backup = false /* true  → enables VM backup using Recovery Services Vault */
+  # Backup configuration
+  enable_backup = false /* true  → enables VM backup using Recovery Services Vault */
 
-#   # Recovery Serivce Vault Configuration
-#   recovery_services_vault_name = "existing-rsv"
-#   backup_policy_vm             = "existing-policy"
+  # Recovery Serivce Vault Configuration
+  recovery_services_vault_name = "existing-rsv"
+  backup_policy_vm             = "existing-policy"
 
-#   # Ensure dependencies are created before VM
-#   depends_on = [
-#     module.key_vault,
-#     module.storage_account
-#   ]
-# }
+  # Ensure dependencies are created before VM
+  depends_on = [
+    module.key_vault,
+    module.storage_account
+  ]
+}
 
 
 
@@ -535,127 +535,126 @@ Not needed if only specific VNets (e.g., hub/spoke) should be linked */
   ] */
 }
 
-# module "mssql" {
-#   source = "../../modules/az-compute/rds/mssql"
+module "mssql" {
+  source = "../../modules/az-compute/rds/mssql"
 
-#   env      = local.env
-#   workload = local.workload
+  env      = local.env
+  workload = local.workload
 
-#   # Basic Identity
-#   server_name   = "${local.env}-${local.workload}-sql1"
-#   database_name = "${local.env}_${local.workload}_db1"
+  # Basic Identity
+  server_name   = "${local.env}-${local.workload}-sql1"
+  database_name = "${local.env}_${local.workload}_db1"
 
-#   resource_group_name = module.rg.resource_group_name
-#   location            = module.rg.resource_group_location
-#   tags                = module.rg.tags
+  resource_group_name = module.rg.resource_group_name
+  location            = module.rg.resource_group_location
+  tags                = module.rg.tags
 
-#   # Server Config
-#   server_version = "12.0"
+  # Server Config
+  server_version = "12.0"
 
-#   /* Pricing tier
-#      Examples:
-#      Basic → dev/test
-#      S0/S1 → small workloads
-#      GP_* → General Purpose (recommended)
-#      BC_* → Business Critical (high IO + HA) */
-#   sku_name = "Basic"
+  /* Pricing tier
+     Examples:
+     Basic → dev/test
+     S0/S1 → small workloads
+     GP_* → General Purpose (recommended)
+     BC_* → Business Critical (high IO + HA) */
+  sku_name = "Basic"
 
-#   max_size_gb = 2
+  max_size_gb = 2
 
-#   # Collation for sorting/comparison
-#   collation = "SQL_Latin1_General_CP1_CI_AS"
+  # Collation for sorting/comparison
+  collation = "SQL_Latin1_General_CP1_CI_AS"
 
-#   # Zone redundancy (multi-zone HA)
-#   zone_redundant = false
+  # Zone redundancy (multi-zone HA)
+  zone_redundant = false
 
-#   # Read scale (read-only replicas)
-#   read_scale = false
+  # Read scale (read-only replicas)
+  read_scale = false
 
-#   # Storage type
-#   # Local → cheaper
-#   # Geo → geo-redundant backup
-#   storage_account_type = "Local"
+  # Storage type
+  # Local → cheaper
+  # Geo → geo-redundant backup
+  storage_account_type = "Local"
 
-#   storage_account_id = module.sql_logs_storage_account.storage_account_id
+  storage_account_id = module.sql_logs_storage_account.storage_account_id
 
-#   # Authentication (from Key Vault)
-#   key_vault_id    = module.key_vault.key_vault_id
-#   sql_secret_name = "mssql-credentials"
+  # Authentication (from Key Vault)
+  key_vault_id    = module.key_vault.key_vault_id
+  sql_secret_name = "mssql-credentials"
 
-#   enable_aad_admin        = false
-#   azuread_admin_username  = "AzureAD Admin"
-#   azuread_admin_object_id = null
-
-
-#   # Network Mode (UAT/PROD toggle)
-#   enable_public_access    = true # PROD → false (private only), UAT → can be true if needed
-#   enable_private_endpoint = true
-#   private_subnet_id       = module.virtual_network.subnet_lookup["private_endpoint_be"]
-#   private_dns_zone_id     = module.private_dns.zone_ids["privatelink.database.windows.net"]
-
-#   # Service Endpoint
-#   enable_service_endpoint_mssql = true
-#   app_subnet_id                 = module.virtual_network.subnet_lookup["db"]
-
-#   allowed_ips = ["49.37.209.71"] # only used if public enabled
-
-#   # TDE (Encryption) /* false = system managed key */
-#   enable_tde       = false
-#   use_cmk_tde      = false
-#   key_vault_key_id = null
-#   # key_vault_key_id = module.key_vault.sql_tde_key_id
+  enable_aad_admin        = false
+  azuread_admin_username  = "AzureAD Admin"
+  azuread_admin_object_id = null
 
 
-#   # Auditing
-#   enable_auditing        = false
-#   audit_storage_endpoint = module.sql_logs_storage_account.primary_blob_endpoint
-#   audit_retention_days   = 1
+  # Network Mode (UAT/PROD toggle)
+  enable_public_access    = true # PROD → false (private only), UAT → can be true if needed
+  enable_private_endpoint = true
+  private_subnet_id       = module.virtual_network.subnet_lookup["private_endpoint_be"]
+  private_dns_zone_id     = module.private_dns.zone_ids["privatelink.database.windows.net"]
+
+  # Service Endpoint
+  enable_service_endpoint_mssql = true
+  app_subnet_id                 = module.virtual_network.subnet_lookup["db"]
+
+  allowed_ips = ["49.37.209.71"] # only used if public enabled
+
+  # TDE (Encryption) /* false = system managed key */
+  enable_tde       = false
+  use_cmk_tde      = false
+  key_vault_key_id = null
+  # key_vault_key_id = module.key_vault.sql_tde_key_id
 
 
-#   # Security Alerts
-#   enable_security_alerts = false
-#   alert_retention_days   = 1
-#   alerts_state           = "Enabled"
-
-#   # Email Accounts
-#   email_account_admins = false
-#   email_addresses = [
-#     "dba@company.com",
-#     "cloudops@company.com",
-#     "security@company.com"
-#   ]
+  # Auditing
+  enable_auditing        = false
+  audit_storage_endpoint = module.sql_logs_storage_account.primary_blob_endpoint
+  audit_retention_days   = 1
 
 
-#   # Vulnerability Assessment
-#   enable_va = false
-#   va_state  = false # or "Disabled"
+  # Security Alerts
+  enable_security_alerts = false
+  alert_retention_days   = 1
+  alerts_state           = "Enabled"
 
-#   va_storage_container = module.sql_logs_storage_account.container_urls["sql-va-logs"]
-#   va_storage_key       = module.sql_logs_storage_account.primary_access_key
+  # Email Accounts
+  email_account_admins = false
+  email_addresses = [
+    "dba@company.com",
+    "cloudops@company.com",
+    "security@company.com"
+  ]
+
+  # Vulnerability Assessment
+  enable_va = false
+  va_state  = false # or "Disabled"
+
+  va_storage_container = module.sql_logs_storage_account.container_urls["sql-va-logs"]
+  va_storage_key       = module.sql_logs_storage_account.primary_access_key
 
 
-#   # Backup / LTR
-#   short_term_retention_days = 7
+  # Backup / LTR
+  short_term_retention_days = 7
 
-#   enable_long_term_retention = false
+  enable_long_term_retention = false
 
-#   ltr_weekly_retention  = "P4W"
-#   ltr_monthly_retention = "P12M"
-#   ltr_yearly_retention  = "P3Y"
-#   ltr_week_of_year      = 1
+  ltr_weekly_retention  = "P4W"
+  ltr_monthly_retention = "P12M"
+  ltr_yearly_retention  = "P3Y"
+  ltr_week_of_year      = 1
 
 
-#   # Optional Features
-#   enable_outbound_firewall = false
+  # Optional Features
+  enable_outbound_firewall = false
 
-#   # Dependencies
-#   depends_on = [
-#     module.key_vault,
-#     module.virtual_network,
-#     module.sql_logs_storage_account,
-#     module.private_dns
-#   ]
-# }
+  # Dependencies
+  depends_on = [
+    module.key_vault,
+    module.virtual_network,
+    module.sql_logs_storage_account,
+    module.private_dns
+  ]
+}
 
 module "acr" {
   source = "../../modules/az-acr"
@@ -826,9 +825,9 @@ module "aks" {
   workload_identity_enabled = true
 
   /* Enables Azure Monitor (OMS agent) to collect AKS logs and send them to Log Analytics Workspace */
-  enable_oms_agent           = false
-  log_analytics_workspace_id = null
-  # log_analytics_workspace_id    = module.log_analytics.workspace_id
+  enable_oms_agent = true
+  # log_analytics_workspace_id = null
+  log_analytics_workspace_id = module.log_analytics.workspace_id
 
   storage_profile = {
     blob_driver_enabled = true
@@ -919,12 +918,18 @@ module "appservice_plan_linux" {
   zone_balancing_enabled = false
 }
 
+
 module "app_service" {
   source = "../../modules/az-appservice_webapp"
+
+  # Basic Identity
+  env      = local.env
+  workload = local.workload
 
   name                = "${local.env}-${local.workload}-fe-lnx-webapp"
   location            = module.rg.resource_group_location
   resource_group_name = module.rg.resource_group_name
+  tags                = module.rg.tags
 
   app_service_plan_id = module.appservice_plan_linux.app_service_plan_id
 
@@ -947,9 +952,9 @@ module "app_service" {
   app_logs_sas_url  = module.storage_account["sa1"].container_urls["app-logs"]
   http_logs_sas_url = module.storage_account["sa1"].container_urls["http-logs"]
 
-  enable_app_insights = false
-  app_insights_key    = null
-  # app_insights_key    = module.app_insights.instrumentation_key
+  enable_app_insights = true
+  # app_insights_key    = null
+  app_insights_key = module.app_insights.connection_string
 
   ip_restrictions = [
     {
@@ -985,5 +990,74 @@ module "app_service" {
     module.storage_account,
     module.private_dns,
     module.appservice_plan_linux
+  ]
+}
+
+module "log_analytics" {
+  source = "../../modules/az-log-analytics"
+
+  # Basic Identity
+  env      = local.env
+  workload = local.workload
+
+  name                = "${local.env}-${local.workload}-law-main" # -> UAT; Workspace for per environment.
+  location            = module.rg.resource_group_location
+  resource_group_name = module.rg.resource_group_name
+  tags                = module.rg.tags
+
+  # IAM control
+  create_monitoring_group = true
+  monitoring_group_name   = "app-monitoring-readers"
+  add_current_user        = true
+
+  sku               = "PerGB2018"
+  retention_in_days = 30
+  daily_quota_gb    = 1
+
+  # Explicit configs (so you KNOW what’s enabled)
+  allow_resource_only_permissions         = true
+  local_authentication_enabled            = true
+  internet_query_enabled                  = true
+  immediate_data_purge_on_30_days_enabled = false
+}
+
+module "monitoring" {
+  source = "../../modules/az-compute/aks/monitoring"
+
+  aks_dcr_name        = "dcr-aks-balanced"
+  aks_dcr_association = "aks-dcr-association"
+
+  location                   = module.rg.resource_group_location
+  resource_group_name        = module.rg.resource_group_name
+  log_analytics_workspace_id = module.log_analytics.workspace_id
+  aks_id                     = module.aks.aks_id
+
+  action_group_id = module.action_group.id
+}
+
+
+module "app_insights" {
+  source = "../../modules/az-appservice_webapp/app_insights"
+
+  name                = "${local.env}${local.workload}-appi"
+  location            = module.rg.resource_group_location
+  resource_group_name = module.rg.resource_group_name
+
+  workspace_id        = module.log_analytics.workspace_id
+  sampling_percentage = 100 # or override later
+  retention_in_days   = 30
+
+  action_group_id = module.action_group.id
+}
+
+module "action_group" {
+  source = "../../modules/az-action_group"
+
+  name                = "${local.env}-common-alerts"
+  short_name          = "alerts"
+  resource_group_name = module.rg.resource_group_name
+
+  emails = [
+    "ops-team@company.com"
   ]
 }

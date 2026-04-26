@@ -6,17 +6,17 @@ locals {
 
   # APP SETTINGS
   app_settings_uat = {
-    ENVIRONMENT                    = "uat"
-    API_URL                        = "https://aks-backend-url"
-    BASE_URL                       = "https://${var.uat_hostname}.${var.domain}"
-    APPINSIGHTS_INSTRUMENTATIONKEY = var.enable_app_insights ? var.app_insights_key : null
+    ENVIRONMENT                           = "uat"
+    API_URL                               = "https://aks-backend-url"
+    BASE_URL                              = "https://${var.uat_hostname}.${var.domain}"
+    APPLICATIONINSIGHTS_CONNECTION_STRING = var.enable_app_insights ? var.app_insights_key : null
   }
 
   app_settings_prod = {
-    ENVIRONMENT                    = "prod"
-    API_URL                        = "https://aks-backend-url"
-    BASE_URL                       = "https://${var.prod_hostname}.${var.domain}"
-    APPINSIGHTS_INSTRUMENTATIONKEY = var.enable_app_insights ? var.app_insights_key : null
+    ENVIRONMENT                           = "prod"
+    API_URL                               = "https://aks-backend-url"
+    BASE_URL                              = "https://${var.prod_hostname}.${var.domain}"
+    APPLICATIONINSIGHTS_CONNECTION_STRING = var.enable_app_insights ? var.app_insights_key : null
   }
 
   # SITE CONFIG
