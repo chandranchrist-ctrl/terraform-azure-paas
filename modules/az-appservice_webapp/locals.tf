@@ -1,7 +1,7 @@
 locals {
 
   # SCM restriction (VALID placement)
-  scm_ip     = "49.37.209.71/32"
+  scm_ip     = "49.37.211.93/32"
   scm_action = "Allow"
 
   # APP SETTINGS

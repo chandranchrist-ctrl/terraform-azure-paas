@@ -39,4 +39,5 @@ resource "azurerm_private_dns_zone_virtual_network_link" "links" {
 
   /*  false = recommended for production (manual control of DNS records, avoids conflicts);
   true = auto-registers VM DNS records (use only for simple VM-based setups) */
+  depends_on = [azurerm_private_dns_zone.zones]
 }

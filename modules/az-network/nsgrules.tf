@@ -20,13 +20,45 @@ locals {
         destination_port_ranges    = ["80", "443"]
         source_asg                 = null
         dest_asg                   = null
+      },
+      {
+        name      = "allow-jumpbox-to-aks"
+        priority  = 101
+        direction = "Inbound"
+        access    = "Allow"
+        protocol  = "Tcp"
+
+
+        source_address_prefixes = [
+          "10.0.1.0/27" # appservice CIDR
+        ]
+        source_port_range          = "*"
+        destination_address_prefix = "*"
+        destination_port_ranges    = ["80", "443"]
+        source_asg                 = null
+        dest_asg                   = null
+      },
+      {
+        name                    = "deny-backend-appl"
+        priority                = 1003
+        direction               = "Inbound"
+        access                  = "Deny"
+        protocol                = "Tcp"
+        source_port_range       = "*"
+        destination_port_ranges = ["80", "443"]
+
+        source_address_prefix      = "*"
+        destination_address_prefix = "*"
+
+        source_asg = null
+        dest_asg   = null
       }
     ]
 
     # Rules for database subnet (example: allow SQL traffic)
     "be-db" = [
       {
-        name      = "allow-sql"
+        name      = "allow-aks-to-sql"
         priority  = 100
         direction = "Inbound"
         access    = "Allow"
@@ -39,7 +71,23 @@ locals {
         destination_port_range     = "1433"
         source_asg                 = null
         dest_asg                   = null
+      },
+      {
+        name      = "allow-jumpbox-to-sql"
+        priority  = 101
+        direction = "Inbound"
+        access    = "Allow"
+        protocol  = "Tcp"
+        source_address_prefixes = [
+          "10.0.1.0/27" # Aks Nodes CIDR
+        ]
+        source_port_range          = "*"
+        destination_address_prefix = "*"
+        destination_port_range     = "1433"
+        source_asg                 = null
+        dest_asg                   = null
       }
+
     ]
   }
 }

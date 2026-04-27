@@ -61,9 +61,25 @@ resource "azurerm_mssql_server_vulnerability_assessment" "va" {
   }
 }
 
+resource "azurerm_role_assignment" "sql_kv_secrets" {
+  scope                = var.key_vault_id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = azurerm_mssql_server.mssql.identity[0].principal_id
+}
 
+resource "azurerm_role_assignment" "sql_kv_keys" {
+  scope                = var.key_vault_id
+  role_definition_name = "Key Vault Crypto User"
+  principal_id         = azurerm_mssql_server.mssql.identity[0].principal_id
+}
+
+resource "azurerm_role_assignment" "sql_kv_cert" {
+  scope                = var.key_vault_id
+  role_definition_name = "Key Vault Certificates User"
+  principal_id         = azurerm_mssql_server.mssql.identity[0].principal_id
+}
 /* Azure SQL Server (Managed Identity) - SQL can access Key Vault key for TDE encryption/decryption */
-resource "azurerm_key_vault_access_policy" "sql" {
+/* resource "azurerm_key_vault_access_policy" "sql" {
   key_vault_id = var.key_vault_id
 
   tenant_id = data.azurerm_client_config.current.tenant_id
@@ -88,7 +104,7 @@ resource "azurerm_key_vault_access_policy" "sql" {
   depends_on = [
     azurerm_mssql_server.mssql
   ]
-}
+} */
 
 /* Assigns "Storage Blob Data Contributor" role to SQL Server's Managed Identity;
 so it can read/write blobs (used for auditing, vulnerability assessment, backups) */

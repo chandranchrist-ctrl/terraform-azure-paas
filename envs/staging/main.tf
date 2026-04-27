@@ -36,7 +36,6 @@ module "rg" {
   source = "../../modules/az-rg"
 
   env      = local.env
-  workload = local.workload
 
   # Input Variables
   resource_group_name     = "${local.env}-rg"
@@ -91,12 +90,7 @@ module "virtual_network" {
       app = {
         cidr = ["10.1.1.64/26"]
         tags = { type = "workload" }
-      },
-      private_endpoint_fe = {
-        cidr = ["10.1.2.0/27"]
-        tags = { type = "infra" }
       }
-
     }
 
     be = {
@@ -111,7 +105,7 @@ module "virtual_network" {
       private_endpoint_be = {
         cidr = ["172.21.5.0/27"]
         tags = { type = "infra" }
-      }
+      }      
     }
   }
 }
@@ -134,7 +128,7 @@ module "vnet_peering" {
       allow_gateway_transit   = false
       use_remote_gateways     = false
     },
-    vnet-app_db_to_vnet-hub = {
+    fe_to_hub = {
       name              = "${local.env}-fe-to-hub"
       resource_group    = module.rg.resource_group_name
       vnet_name         = module.virtual_network.vnets["fe"].name
@@ -195,6 +189,36 @@ module "vnet_peering" {
   depends_on = [module.virtual_network]
 }
 
+# Network - Private DNS
+module "private_dns" {
+  source = "../../modules/az-dns/private"
+
+  resource_group_name = module.rg.resource_group_name
+
+  /* list of private DNS zones to create */
+  zones = [
+    "privatelink.database.windows.net",
+    "privatelink.blob.core.windows.net",
+    "privatelink.vaultcore.azure.net",
+    "privatelink.azurecr.io"
+  ]
+
+  /* VNets to link with DNS zones for name resolution */
+  vnet_ids = [
+    module.virtual_network.vnets["hub"].id,
+    module.virtual_network.vnets["fe"].id,
+    module.virtual_network.vnets["be"].id
+  ]
+
+  /* Alternative Declaration {vnet_ids}: dynamically fetch all VNet IDs from module output;
+Use when you want to link DNS to all VNets automatically (no manual selection needed);
+Not needed if only specific VNets (e.g., hub/spoke) should be linked */
+
+  /*   vnet_ids = [
+    for v in module.virtual_network.vnets : v.id
+  ] */
+}
+
 # Storage - Storage Account{for diagnostics}
 module "storage_account" {
   source = "../../modules/az-storage"
@@ -225,7 +249,7 @@ module "storage_account" {
     module.virtual_network.subnet_lookup["db"]
   ]
 
-  allowed_ip_rules = ["49.37.211.249"] /* allows access from specific public IPs */
+  allowed_ip_rules = ["49.37.211.93"] /* allows access from specific public IPs */
 
   /* List of storage containers to create inside the storage account (each item becomes one container) */
   containers = [
@@ -234,7 +258,7 @@ module "storage_account" {
     "backups"
   ]
 
-  enable_sas = false
+  enable_sas = true
 
   # Lifecycle Enabled
   /* lifecycle_rules = [] - lifecycle NOT needed → empty or omitted */
@@ -252,7 +276,7 @@ module "storage_account" {
     {
       name   = "backup-retention"
       prefix = ["backups/"]
-      days   = 30
+      days   = 7
     }
   ]
 }
@@ -306,6 +330,93 @@ module "sql_logs_storage_account" {
       days   = 7
     }
   ]
+}
+
+# Security - Key Vault
+module "key_vault" {
+  source = "../../modules/az-keyvault"
+
+  name = var.key_vault_name /* "${local.env}-${local.workload}-kv-17" = Key Vault names must be globally unique across Azure. */
+
+  location            = module.rg.resource_group_location
+  resource_group_name = module.rg.resource_group_name
+  tags                = module.rg.tags
+
+  /* false = uses access policies, true = uses RBAC */
+  rbac_authorization_enabled = true
+
+  /* true = creates access for current user, false = no access policy */
+  create_access_policy_me = false
+
+  /* standard = basic features, premium = supports HSM-backed keys */
+  sku_name = "standard" # Standard or Premium
+
+  soft_delete_retention_days = 7 /* days to retain deleted items (7–90) */
+  purge_protection_enabled   = false /* true = prevents permanent deletion, false = allows purge */
+
+  enabled_for_deployment          = true /* true = allows VM deployment access */
+  enabled_for_template_deployment = true /* true = allows ARM template access */
+
+  enable_private_endpoint = true
+  private_subnet_id       = module.virtual_network.subnet_lookup["private_endpoint_be"]
+  private_dns_zone_id     = module.private_dns.zone_ids["privatelink.vaultcore.azure.net"]
+
+  public_network_access_enabled = true /* true = allows public access, false = private only */
+
+  network_acls_default_action = "Deny" /* Deny = block all except allowed, Allow = open access */
+  allowed_ip_ranges           = ["49.37.209.71/32"] /* allowed public IPs */
+
+  /*   For subnet restrictions, ensure the subnets exist and are correctly referenced.
+  service_endpoints = ["Microsoft.KeyVault"] is enabled on those subnets in the network module. */
+  allowed_subnet_ids = [
+    module.virtual_network.subnet_lookup["app"],
+    module.virtual_network.subnet_lookup["aks"],
+    module.virtual_network.subnet_lookup["db"]
+  ]
+
+  # Security - SSH Key
+  /* stores SSH public key as secret */
+  ssh_secret_name = "linux-ssh-public-key"
+  ssh_public_key  = file("${path.module}/ssh/id_rsa.pub")
+
+  # Security - Secrets
+  /* key-value secrets stored in Key Vault */
+  secrets = {
+    localadmin-credentials = jsonencode({
+      admin-username = "HBAdmin",
+      admin-password = "Qwerty123!",
+    })
+
+    mssql-credentials = jsonencode({
+      username = "sqladmin"
+      password = "SQLP@ssword!23!"
+    })
+
+    godaddy-apikey = jsonencode({
+      Key    = "hkHptCfQoPVe_S64u3fVz88NYAZwGPuE9ir"
+      Secret = "QLsAdAfb4pLq4VsVMQ2gFT"
+    })
+  }
+
+  # Security - Certificates
+  /* imports certificates from PFX */
+  certificates = [
+    {
+      name     = "wildcard-cert"
+      pfx_path = "./certs/certificate.pfx"
+      password = "Y12345Z"
+    }
+  ]
+
+  # Monitoring - Diagnostics
+  audit_storage_account_name = module.storage_account["sa1"].storage_account_name /* Ex. "kvlogstorage" to declare the name directly */
+  audit_storage_account_rg   = module.rg.resource_group_name
+
+  # depends_on ensures storage account is created before enabling diagnostics
+  depends_on = [
+    module.storage_account,
+    module.private_dns
+    ]
 }
 
 # Network Security - Azure Bastion
@@ -419,122 +530,6 @@ module "jumpbox_linux_vm" {
   ]
 }
 
-
-
-# Security - Key Vault
-module "key_vault" {
-  source = "../../modules/az-keyvault"
-
-  name = var.key_vault_name /* "${local.env}-${local.workload}-kv-17" = Key Vault names must be globally unique across Azure. */
-
-  location            = module.rg.resource_group_location
-  resource_group_name = module.rg.resource_group_name
-  tags                = module.rg.tags
-
-  /* false = uses access policies, true = uses RBAC */
-  rbac_authorization_enabled = false
-
-  /* true = creates access for current user, false = no access policy */
-  create_access_policy_me = true
-
-  /* standard = basic features, premium = supports HSM-backed keys */
-  sku_name = "standard" # Standard or Premium
-
-  soft_delete_retention_days = 7 /* days to retain deleted items (7–90) */
-  purge_protection_enabled   = false /* true = prevents permanent deletion, false = allows purge */
-
-  enabled_for_deployment          = true /* true = allows VM deployment access */
-  enabled_for_template_deployment = true /* true = allows ARM template access */
-
-  enable_private_endpoint = true
-  private_subnet_id       = module.virtual_network.subnet_lookup["private_endpoint_be"]
-  private_dns_zone_id     = module.private_dns.zone_ids["privatelink.vaultcore.azure.net"]
-
-  public_network_access_enabled = true /* true = allows public access, false = private only */
-
-  network_acls_default_action = "Deny" /* Deny = block all except allowed, Allow = open access */
-  allowed_ip_ranges           = ["49.37.209.71/32"] /* allowed public IPs */
-
-  /*   For subnet restrictions, ensure the subnets exist and are correctly referenced.
-  service_endpoints = ["Microsoft.KeyVault"] is enabled on those subnets in the network module. */
-  allowed_subnet_ids = [
-    module.virtual_network.subnet_lookup["app"],
-    module.virtual_network.subnet_lookup["aks"],
-    module.virtual_network.subnet_lookup["db"]
-  ]
-
-  # Security - SSH Key
-  /* stores SSH public key as secret */
-  ssh_secret_name = "linux-ssh-public-key"
-  ssh_public_key  = file("${path.module}/ssh/id_rsa.pub")
-
-  # Security - Secrets
-  /* key-value secrets stored in Key Vault */
-  secrets = {
-    localadmin-credentials = jsonencode({
-      admin-username = "HBAdmin",
-      admin-password = "Qwerty123!",
-    })
-
-    mssql-credentials = jsonencode({
-      username = "sqladmin"
-      password = "SQLP@ssword!23!"
-    })
-
-    godaddy-apikey = jsonencode({
-      Key    = "hkHptCfQoPVe_S64u3fVz88NYAZwGPuE9ir"
-      Secret = "QLsAdAfb4pLq4VsVMQ2gFT"
-    })
-  }
-
-  # Security - Certificates
-  /* imports certificates from PFX */
-  certificates = [
-    {
-      name     = "wildcard-cert"
-      pfx_path = "./certs/certificate.pfx"
-      password = "Y12345Z"
-    }
-  ]
-
-  # Monitoring - Diagnostics
-  audit_storage_account_name = module.storage_account["sa1"].storage_account_name /* Ex. "kvlogstorage" to declare the name directly */
-  audit_storage_account_rg   = module.rg.resource_group_name
-
-  # depends_on ensures storage account is created before enabling diagnostics
-  depends_on = [module.storage_account]
-}
-
-# Network - Private DNS
-module "private_dns" {
-  source = "../../modules/az-dns/private"
-
-  resource_group_name = module.rg.resource_group_name
-
-  /* list of private DNS zones to create */
-  zones = [
-    "privatelink.database.windows.net",
-    "privatelink.blob.core.windows.net",
-    "privatelink.vaultcore.azure.net",
-    "privatelink.azurecr.io"
-  ]
-
-  /* VNets to link with DNS zones for name resolution */
-  vnet_ids = [
-    module.virtual_network.vnets["hub"].id,
-    module.virtual_network.vnets["fe"].id,
-    module.virtual_network.vnets["be"].id
-  ]
-
-  /* Alternative Declaration {vnet_ids}: dynamically fetch all VNet IDs from module output;
-Use when you want to link DNS to all VNets automatically (no manual selection needed);
-Not needed if only specific VNets (e.g., hub/spoke) should be linked */
-
-  /*   vnet_ids = [
-    for v in module.virtual_network.vnets : v.id
-  ] */
-}
-
 module "mssql" {
   source = "../../modules/az-compute/rds/mssql"
 
@@ -594,10 +589,10 @@ module "mssql" {
   private_dns_zone_id     = module.private_dns.zone_ids["privatelink.database.windows.net"]
 
   # Service Endpoint
-  enable_service_endpoint_mssql = true
+  enable_service_endpoint_mssql = false
   app_subnet_id                 = module.virtual_network.subnet_lookup["db"]
 
-  allowed_ips = ["49.37.209.71"] # only used if public enabled
+  allowed_ips = ["49.37.211.93"] # only used if public enabled
 
   # TDE (Encryption) /* false = system managed key */
   enable_tde       = false
@@ -682,7 +677,7 @@ module "acr" {
   Set false in PROD when using Private Endpoint only. */
   public_network_access_enabled = true
 
-  allowed_ips = ["49.37.209.71"]
+  allowed_ips = ["49.37.211.93"]
 
   identity_type = "SystemAssigned"
 
@@ -697,7 +692,6 @@ module "acr" {
   /* Key Vault Key ID used for CMK encryption (Premium only).
   Set only when enable_cmk = true, otherwise keep null */
   acr_cmk_id = null
-
 
   /* enable below id only in Premium CMK setup: */
   # acr_cmk_id = module.key_vault.acr_cmk_id 
@@ -734,6 +728,46 @@ module "acr" {
   ]
 }
 
+module "action_group" {
+  source = "../../modules/az-action_group"
+
+  name                = "${local.env}-common-alerts"
+  short_name          = "alerts"
+  resource_group_name = module.rg.resource_group_name
+
+  emails = [
+    "chandranchrist@gmail.com"
+  ]
+}
+
+module "log_analytics" {
+  source = "../../modules/az-log-analytics"
+
+  # Basic Identity
+  env      = local.env
+  workload = local.workload
+
+  name                = "${local.env}-${local.workload}-law-main" # -> UAT; Workspace for per environment.
+  location            = module.rg.resource_group_location
+  resource_group_name = module.rg.resource_group_name
+  tags                = module.rg.tags
+
+  # IAM control
+  create_monitoring_group = true
+  monitoring_group_name   = "app-monitoring-readers"
+  add_current_user        = true
+
+  sku               = "PerGB2018"
+  retention_in_days = 30
+  daily_quota_gb    = 1
+
+  # Explicit configs (so you KNOW what’s enabled)
+  allow_resource_only_permissions         = true
+  local_authentication_enabled            = true
+  internet_query_enabled                  = true
+  immediate_data_purge_on_30_days_enabled = false
+}
+
 module "aks" {
   source = "../../modules/az-compute/aks"
 
@@ -746,7 +780,7 @@ module "aks" {
   location            = module.rg.resource_group_location
   tags                = module.rg.tags
 
-  kubernetes_version = "1.29"
+  kubernetes_version = "1.35"
 
   sku_tier = "Standard"
 
@@ -805,6 +839,8 @@ module "aks" {
 
   enable_maintenance_window = true
 
+  acr_id = module.acr.acr_id
+
   enable_defender = false
 
   defender_workspace_id = null
@@ -848,6 +884,19 @@ module "aks" {
     vnet_subnet_id       = module.virtual_network.subnet_lookup["aks"]
   }
 
+  # NODE POOLS (extra)
+  node_pools = {
+    workernode = {
+      name                 = "workernode1"
+      vm_size              = "Standard_B2s"
+      node_count           = 1
+      auto_scaling_enabled = true
+      min_count            = 1
+      max_count            = 3
+      vnet_subnet_id       = module.virtual_network.subnet_lookup["aks"]
+    }
+  }
+
   # EXTENSIONS
   extensions = {
     container-storage = {
@@ -867,7 +916,7 @@ module "aks" {
     }
   }
 
-  acr_id = module.acr.acr_id
+
 
   # DEPLOYMENT SAFEGUARD
   deployment_safeguard = {
@@ -884,20 +933,35 @@ module "aks" {
     }
   }
 
-  # NODE POOLS (extra)
-  node_pools = {
-    workernode = {
-      name                 = "workernode1"
-      vm_size              = "Standard_B2s"
-      node_count           = 1
-      auto_scaling_enabled = true
-      min_count            = 1
-      max_count            = 3
-      vnet_subnet_id       = module.virtual_network.subnet_lookup["aks"]
-    }
-  }
+  depends_on = [
+  module.rg,
+  module.virtual_network,
+  module.key_vault,
+  module.acr,
+  module.private_dns,
+  module.log_analytics,
+]
 }
 
+module "monitoring" {
+  source = "../../modules/az-compute/aks/monitoring"
+
+  aks_dcr_name        = "dcr-aks-balanced"
+  aks_dcr_association = "aks-dcr-association"
+
+  location                   = module.rg.resource_group_location
+  resource_group_name        = module.rg.resource_group_name
+  log_analytics_workspace_id = module.log_analytics.workspace_id
+  aks_id                     = module.aks.aks_id
+
+  action_group_id = module.action_group.id
+
+  depends_on = [
+    module.aks,
+    module.action_group,
+    module.log_analytics
+   ]
+}
 
 # Linux App Service Plan
 module "appservice_plan_linux" {
@@ -917,7 +981,6 @@ module "appservice_plan_linux" {
 
   zone_balancing_enabled = false
 }
-
 
 module "app_service" {
   source = "../../modules/az-appservice_webapp"
@@ -959,7 +1022,7 @@ module "app_service" {
   ip_restrictions = [
     {
       name       = "office-ip"
-      ip_address = "49.37.209.71/32"
+      ip_address = "49.37.211.93/32"
       priority   = 100
       action     = "Allow"
     }
@@ -993,49 +1056,6 @@ module "app_service" {
   ]
 }
 
-module "log_analytics" {
-  source = "../../modules/az-log-analytics"
-
-  # Basic Identity
-  env      = local.env
-  workload = local.workload
-
-  name                = "${local.env}-${local.workload}-law-main" # -> UAT; Workspace for per environment.
-  location            = module.rg.resource_group_location
-  resource_group_name = module.rg.resource_group_name
-  tags                = module.rg.tags
-
-  # IAM control
-  create_monitoring_group = true
-  monitoring_group_name   = "app-monitoring-readers"
-  add_current_user        = true
-
-  sku               = "PerGB2018"
-  retention_in_days = 30
-  daily_quota_gb    = 1
-
-  # Explicit configs (so you KNOW what’s enabled)
-  allow_resource_only_permissions         = true
-  local_authentication_enabled            = true
-  internet_query_enabled                  = true
-  immediate_data_purge_on_30_days_enabled = false
-}
-
-module "monitoring" {
-  source = "../../modules/az-compute/aks/monitoring"
-
-  aks_dcr_name        = "dcr-aks-balanced"
-  aks_dcr_association = "aks-dcr-association"
-
-  location                   = module.rg.resource_group_location
-  resource_group_name        = module.rg.resource_group_name
-  log_analytics_workspace_id = module.log_analytics.workspace_id
-  aks_id                     = module.aks.aks_id
-
-  action_group_id = module.action_group.id
-}
-
-
 module "app_insights" {
   source = "../../modules/az-appservice_webapp/app_insights"
 
@@ -1050,14 +1070,3 @@ module "app_insights" {
   action_group_id = module.action_group.id
 }
 
-module "action_group" {
-  source = "../../modules/az-action_group"
-
-  name                = "${local.env}-common-alerts"
-  short_name          = "alerts"
-  resource_group_name = module.rg.resource_group_name
-
-  emails = [
-    "ops-team@company.com"
-  ]
-}

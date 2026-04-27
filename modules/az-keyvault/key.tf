@@ -15,8 +15,6 @@ resource "azurerm_key_vault_key" "sql_tde_key" {
     "wrapKey",
     "unwrapKey"
   ]
-
-  depends_on = [azurerm_key_vault_access_policy.me]
 }
 
 resource "azurerm_key_vault_key" "acr_cmk" {

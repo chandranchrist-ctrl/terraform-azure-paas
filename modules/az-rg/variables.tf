@@ -2,10 +2,6 @@ variable "env" {
   type = string
 }
 
-variable "workload" {
-  type = string
-}
-
 # Resource Group
 variable "resource_group_name" {
   type        = string
