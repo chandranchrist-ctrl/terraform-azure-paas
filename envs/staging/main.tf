@@ -35,7 +35,7 @@ locals {
 module "rg" {
   source = "../../modules/az-rg"
 
-  env      = local.env
+  env = local.env
 
   # Input Variables
   resource_group_name     = "${local.env}-rg"
@@ -105,7 +105,7 @@ module "virtual_network" {
       private_endpoint_be = {
         cidr = ["172.21.5.0/27"]
         tags = { type = "infra" }
-      }      
+      }
     }
   }
 }
@@ -416,7 +416,7 @@ module "key_vault" {
   depends_on = [
     module.storage_account,
     module.private_dns
-    ]
+  ]
 }
 
 # Network Security - Azure Bastion
@@ -934,13 +934,13 @@ module "aks" {
   }
 
   depends_on = [
-  module.rg,
-  module.virtual_network,
-  module.key_vault,
-  module.acr,
-  module.private_dns,
-  module.log_analytics,
-]
+    module.rg,
+    module.virtual_network,
+    module.key_vault,
+    module.acr,
+    module.private_dns,
+    module.log_analytics,
+  ]
 }
 
 module "monitoring" {
@@ -960,7 +960,7 @@ module "monitoring" {
     module.aks,
     module.action_group,
     module.log_analytics
-   ]
+  ]
 }
 
 # Linux App Service Plan
