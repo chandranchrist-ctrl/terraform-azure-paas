@@ -10,7 +10,7 @@ resource "azuread_group" "monitoring_readers" {
 resource "azuread_group_member" "current_user" {
   count = var.create_monitoring_group && var.add_current_user ? 1 : 0
 
-  group_object_id  = azuread_group.monitoring_readers[0].id
+  group_object_id  = azuread_group.monitoring_readers[0].object_id
   member_object_id = data.azuread_client_config.current.object_id
 }
 
@@ -19,5 +19,5 @@ resource "azurerm_role_assignment" "law_monitoring_reader" {
 
   scope                = azurerm_log_analytics_workspace.law.id
   role_definition_name = "Monitoring Reader"
-  principal_id         = azuread_group.monitoring_readers[0].id
+  principal_id         = azuread_group.monitoring_readers[0].object_id
 }

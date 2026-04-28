@@ -1,10 +1,9 @@
 subscription_id = "e5e41cc7-7577-47be-a02d-3294887037d2"
 
-storage_accounts = {
-  sa1 = "uatbkspappservsa01"
-  # sa2 = "uatstorageaccsqllogs06"
-}
+diag_storage_account_name = "uatbkspdiagsa06"
 
-sql_logs_storage_account_name = "uatbkspsqllogssa01"
+appservice_storage_account_name = "uatbkspappservsa06"
 
-key_vault_name = "uat-bookshop-kv01"
+mssql_storage_account_name = "uatbkspmssqlsa06"
+
+key_vault_name = "uat-bookshop-kv06"

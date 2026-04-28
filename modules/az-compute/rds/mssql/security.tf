@@ -75,7 +75,7 @@ resource "azurerm_role_assignment" "sql_kv_keys" {
 
 resource "azurerm_role_assignment" "sql_kv_cert" {
   scope                = var.key_vault_id
-  role_definition_name = "Key Vault Certificates User"
+  role_definition_name = "Key Vault Certificates Officer"
   principal_id         = azurerm_mssql_server.mssql.identity[0].principal_id
 }
 /* Azure SQL Server (Managed Identity) - SQL can access Key Vault key for TDE encryption/decryption */

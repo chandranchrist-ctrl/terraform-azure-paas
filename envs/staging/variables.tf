@@ -9,10 +9,14 @@ variable "key_vault_name" {
   default = ""
 }
 
-variable "storage_accounts" {
-  type = map(string)
+variable "diag_storage_account_name" {
+  type = string
 }
 
-variable "sql_logs_storage_account_name" {
+variable "appservice_storage_account_name" {
+  type = string
+}
+
+variable "mssql_storage_account_name" {
   type = string
 }

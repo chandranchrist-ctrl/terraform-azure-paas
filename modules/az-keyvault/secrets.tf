@@ -21,8 +21,8 @@ resource "azurerm_key_vault_secret" "secrets" {
   value        = each.value
   key_vault_id = azurerm_key_vault.kv.id
 
-  depends_on = [
-    azurerm_key_vault_access_policy.me
+    depends_on = [
+    time_sleep.rbac_propagation
   ]
 }
 
@@ -32,5 +32,7 @@ resource "azurerm_key_vault_secret" "ssh_public_key" {
   value        = var.ssh_public_key
   key_vault_id = azurerm_key_vault.kv.id
 
-  depends_on = [azurerm_key_vault_access_policy.me]
+    depends_on = [
+    time_sleep.rbac_propagation
+  ]
 }

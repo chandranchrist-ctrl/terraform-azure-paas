@@ -87,7 +87,22 @@ locals {
         source_asg                 = null
         dest_asg                   = null
       }
+    ]
 
+    "hub-jumpbox" = [
+      {
+        name      = "allow-rdp-ssh"
+        priority  = 100
+        direction = "Inbound"
+        access    = "Allow"
+        protocol  = "Tcp"
+        source_address_prefix = "*" # Aks Nodes CIDR
+        source_port_range          = "*"
+        destination_address_prefix = "*"
+        destination_port_ranges     = ["22", "3389"]
+        source_asg                 = null
+        dest_asg                   = null
+      }
     ]
   }
 }

@@ -32,16 +32,16 @@ resource "azurerm_container_registry" "acr" {
     }
   }
 
-  network_rule_set {
-    default_action = "Deny"
+  # network_rule_set {
+  #   default_action = "Deny"
 
-    ip_rule = [
-      for ip in var.allowed_ips : {
-        action   = "Allow"
-        ip_range = ip
-      }
-    ]
-  }
+  #   ip_rule = [
+  #     for ip in var.allowed_ips : {
+  #       action   = "Allow"
+  #       ip_range = ip
+  #     }
+  #   ]
+  # }
 
   dynamic "georeplications" {
     for_each = var.enable_georeplication ? var.replica_locations : []

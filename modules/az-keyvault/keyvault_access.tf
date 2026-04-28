@@ -27,11 +27,30 @@ resource "azurerm_role_assignment" "kv_admin" {
   scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Administrator"
   principal_id         = azuread_group.kv_admins.object_id
+
+    depends_on = [
+    azuread_group.kv_admins,
+    azurerm_key_vault.kv
+  ]
 }
 
 # DevOps Access (Secrets only)
-resource "azurerm_role_assignment" "kv_devops_secrets" {
+resource "azurerm_role_assignment" "kv_devops" {
   scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Contributor"
   principal_id         = azuread_group.kv_devops.object_id
+
+    depends_on = [
+    azuread_group.kv_devops,
+    azurerm_key_vault.kv
+  ]
+}
+
+resource "time_sleep" "rbac_propagation" {
+  depends_on = [
+    azurerm_role_assignment.kv_admin,
+    azurerm_role_assignment.kv_devops
+  ]
+
+  create_duration = "120s"
 }

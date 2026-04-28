@@ -27,4 +27,5 @@ resource "azurerm_key_vault" "kv" {
   }
 
   tags = var.tags
+
 }
