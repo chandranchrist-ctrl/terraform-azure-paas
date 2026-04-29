@@ -70,8 +70,16 @@ variable "http_logs_sas_url" {
   type = string
 }
 
-variable "app_insights_key" {
-  type = string
+variable "app_insights_connection_string" {
+  type      = string
+  default   = null
+  sensitive = true
+}
+
+variable "app_insights_instrumentation_key" {
+  type      = string
+  default   = null
+  sensitive = true
 }
 
 variable "backup_config" {

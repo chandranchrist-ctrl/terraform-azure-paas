@@ -4,20 +4,32 @@ locals {
   scm_ip     = "49.37.211.93/32"
   scm_action = "Allow"
 
-  # APP SETTINGS
-  app_settings_uat = {
-    ENVIRONMENT                           = "uat"
-    API_URL                               = "https://aks-backend-url"
-    BASE_URL                              = "https://${var.uat_hostname}.${var.domain}"
-    APPLICATIONINSIGHTS_CONNECTION_STRING = var.enable_app_insights ? var.app_insights_key : null
+  app_settings_common = {
+    API_URL = "https://aks-backend-url"
   }
 
-  app_settings_prod = {
-    ENVIRONMENT                           = "prod"
-    API_URL                               = "https://aks-backend-url"
-    BASE_URL                              = "https://${var.prod_hostname}.${var.domain}"
-    APPLICATIONINSIGHTS_CONNECTION_STRING = var.enable_app_insights ? var.app_insights_key : null
-  }
+  app_insights_settings = var.enable_app_insights ? {
+    APPLICATIONINSIGHTS_CONNECTION_STRING = var.app_insights_connection_string
+  } : {}
+
+  # PROD (DEFAULT WEB APP)
+  app_settings_prod = merge(
+    local.app_settings_common,
+    local.app_insights_settings,
+    {
+      ENVIRONMENT = "prod"
+      BASE_URL    = "https://${var.prod_hostname}.${var.domain}"
+  })
+
+  # UAT (SLOT)
+  app_settings_uat = merge(
+    local.app_settings_common,
+    local.app_insights_settings,
+    {
+      ENVIRONMENT = "uat"
+      BASE_URL    = "https://${var.uat_hostname}.${var.domain}"
+  })
+
 
   # SITE CONFIG
   site_config_common = {
@@ -52,6 +64,7 @@ locals {
   # LOGS
   logs_config = {
     application_logs = {
+      file_system_level = "Off"
       level             = "Information"
       retention_in_days = 7
       sas_url           = var.app_logs_sas_url

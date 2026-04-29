@@ -8,6 +8,7 @@ locals {
         subnet_key = subnet_key
         cidr       = subnet.cidr
         tags       = try(subnet.tags, {})
+        delegation = try(subnet.delegation, null)
       }
     }
   ]...)
@@ -34,4 +35,18 @@ resource "azurerm_subnet" "subnet" {
     "Microsoft.Storage",
     "Microsoft.Sql"
   ]
+
+  dynamic "delegation" {
+    for_each = each.value.delegation != null ? [each.value.delegation] : []
+
+    content {
+      name = each.value.delegation.name
+
+      service_delegation {
+        name = each.value.delegation.service_name
+
+        actions = each.value.delegation.actions
+      }
+    }
+  }
 }

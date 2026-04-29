@@ -5,22 +5,44 @@ resource "azurerm_kubernetes_cluster" "aks" {
   resource_group_name = var.resource_group_name
   tags                = var.tags
 
-
   kubernetes_version = var.kubernetes_version
   sku_tier           = var.sku_tier
 
-  dns_prefix                 = var.private_cluster_enabled ? null : var.dns_prefix
-  dns_prefix_private_cluster = var.private_cluster_enabled ? var.dns_prefix_private_cluster : null
+  node_resource_group = var.node_resource_group_name
+
+  dns_prefix = var.dns_prefix
+
+  dns_prefix_private_cluster = (var.private_cluster_enabled && var.use_custom_private_dns) ? "${var.env}aks-private" : null
 
   private_cluster_enabled             = var.private_cluster_enabled
-  private_cluster_public_fqdn_enabled = var.private_cluster_public_fqdn_enabled
-  private_dns_zone_id                 = var.private_dns_zone_id
+  private_cluster_public_fqdn_enabled = var.private_cluster_enabled ? false : null
+  private_dns_zone_id                 = var.private_cluster_enabled ? (var.use_custom_private_dns ? var.private_dns_zone_id : "System") : null
+
 
   automatic_upgrade_channel = var.automatic_upgrade_channel
   node_os_upgrade_channel   = var.node_os_upgrade_channel
 
+  azure_policy_enabled = var.azure_policy_enabled
+
+  # dynamic "api_server_access_profile" {
+  #   for_each = var.api_server_access_profile != null ? [var.api_server_access_profile] : []
+
+  #   content {
+  #     authorized_ip_ranges = api_server_access_profile.value.authorized_ip_ranges
+  #   }
+  # }
+
+  dynamic "key_vault_secrets_provider" {
+    for_each = var.enable_key_vault_csi ? [1] : []
+    content {
+      secret_rotation_enabled = false
+    }
+  }
+
   dynamic "api_server_access_profile" {
-    for_each = var.api_server_access_profile != null ? [var.api_server_access_profile] : []
+    for_each = (
+      var.api_server_access_profile != null && !var.private_cluster_enabled
+    ) ? [var.api_server_access_profile] : []
 
     content {
       authorized_ip_ranges = api_server_access_profile.value.authorized_ip_ranges
@@ -68,18 +90,6 @@ resource "azurerm_kubernetes_cluster" "aks" {
     }
   }
 
-  dynamic "linux_profile" {
-    for_each = var.enable_ssh ? [1] : []
-
-    content {
-      admin_username = var.admin_username
-
-      ssh_key {
-        key_data = data.azurerm_key_vault_secret.ssh_public_key.value
-      }
-    }
-  }
-
   local_account_disabled = var.local_account_disabled
 
   dynamic "maintenance_window" {
@@ -96,9 +106,11 @@ resource "azurerm_kubernetes_cluster" "aks" {
     for_each = var.enable_maintenance_window ? [1] : []
 
     content {
-      frequency = "Weekly"
-      interval  = 1
-      duration  = 4
+      frequency   = "Weekly"
+      interval    = 1
+      duration    = 4
+      day_of_week = "Sunday"
+      start_time  = "01:00"
     }
   }
 
@@ -106,9 +118,11 @@ resource "azurerm_kubernetes_cluster" "aks" {
     for_each = var.enable_maintenance_window ? [1] : []
 
     content {
-      frequency = "Weekly"
-      interval  = 1
-      duration  = 4
+      frequency   = "Weekly"
+      interval    = 1
+      duration    = 4
+      day_of_week = "Sunday"
+      start_time  = "01:00"
     }
   }
 
@@ -118,12 +132,6 @@ resource "azurerm_kubernetes_cluster" "aks" {
     content {
       log_analytics_workspace_id = var.defender_workspace_id
     }
-  }
-
-  dynamic "monitor_metrics" {
-    for_each = var.monitor_metrics ? [1] : []
-
-    content {}
   }
 
   dynamic "network_profile" {

@@ -14,7 +14,7 @@ resource "azuread_group" "app_devops" {
 
 # Add ONLY current user to Admin group
 resource "azuread_group_member" "current_user_admin" {
-  group_object_id  = azuread_group.app_admins.id
+  group_object_id  = azuread_group.app_admins.object_id
   member_object_id = data.azuread_client_config.current.object_id
 }
 
@@ -26,12 +26,12 @@ resource "azuread_group_member" "current_user_admin" {
 resource "azurerm_role_assignment" "app_admin" {
   scope                = azurerm_linux_web_app.app.id
   role_definition_name = "Contributor"
-  principal_id         = azuread_group.app_admins.id
+  principal_id         = azuread_group.app_admins.object_id
 }
 
 # DevOps → Limited to App Service operations
 resource "azurerm_role_assignment" "app_devops" {
   scope                = azurerm_linux_web_app.app.id
   role_definition_name = "Website Contributor"
-  principal_id         = azuread_group.app_devops.id
+  principal_id         = azuread_group.app_devops.object_id
 }

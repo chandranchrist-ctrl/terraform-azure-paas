@@ -5,11 +5,19 @@ data "azuread_client_config" "current" {}
 resource "azuread_group" "kv_admins" {
   display_name     = "kv-admins"
   security_enabled = true
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "azuread_group" "kv_devops" {
   display_name     = "kv-devops"
   security_enabled = true
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # Add ONLY current user to Admin group
@@ -28,7 +36,7 @@ resource "azurerm_role_assignment" "kv_admin" {
   role_definition_name = "Key Vault Administrator"
   principal_id         = azuread_group.kv_admins.object_id
 
-    depends_on = [
+  depends_on = [
     azuread_group.kv_admins,
     azurerm_key_vault.kv
   ]
@@ -40,7 +48,7 @@ resource "azurerm_role_assignment" "kv_devops" {
   role_definition_name = "Key Vault Contributor"
   principal_id         = azuread_group.kv_devops.object_id
 
-    depends_on = [
+  depends_on = [
     azuread_group.kv_devops,
     azurerm_key_vault.kv
   ]
@@ -52,5 +60,5 @@ resource "time_sleep" "rbac_propagation" {
     azurerm_role_assignment.kv_devops
   ]
 
-  create_duration = "120s"
+  create_duration = "180s"
 }

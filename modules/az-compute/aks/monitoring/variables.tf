@@ -26,3 +26,8 @@ variable "aks_dcr_name" {
 variable "aks_dcr_association" {
   type = string
 }
+
+variable "enabled" {
+  type    = bool
+  default = false
+}

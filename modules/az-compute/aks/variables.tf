@@ -31,22 +31,18 @@ variable "dns_prefix" {
   type = string
 }
 
-variable "dns_prefix_private_cluster" {
-  type = string
-}
+# variable "dns_prefix_private_cluster" {
+#   type = string
+# }
 
-variable "private_cluster_enabled" {
-  type = bool
-}
+# variable "private_cluster_public_fqdn_enabled" {
+#   type = bool
+# }
 
-variable "private_cluster_public_fqdn_enabled" {
-  type = bool
-}
-
-variable "private_dns_zone_id" {
-  type    = string
-  default = null
-}
+# variable "private_dns_zone_id" {
+#   type    = string
+#   default = null
+# }
 
 variable "automatic_upgrade_channel" {
   type = string
@@ -87,10 +83,6 @@ variable "kubelet_identity" {
 }
 
 variable "local_account_disabled" {
-  type = bool
-}
-
-variable "monitor_metrics" {
   type = bool
 }
 
@@ -152,7 +144,15 @@ variable "extensions" {
 }
 
 variable "deployment_safeguard" {
-  type = any
+  type    = any
+  default = null
+
+  validation {
+    condition = (
+      var.deployment_safeguard == null || var.azure_policy_enabled == true
+    )
+    error_message = "Azure Policy must be enabled when deployment_safeguard is set."
+  }
 }
 
 variable "trusted_access" {
@@ -202,23 +202,6 @@ variable "enable_trusted_access" {
   default = false
 }
 
-variable "enable_ssh" {
-  type    = bool
-  default = false
-}
-
-variable "admin_username" {
-  type = string
-}
-
-variable "ssh_secret_name" {
-  type = string
-}
-
-variable "key_vault_id" {
-  type = string
-}
-
 variable "aad_rbac" {
   type = object({
     enabled            = bool
@@ -227,5 +210,48 @@ variable "aad_rbac" {
 }
 
 variable "acr_id" {
+  type = string
+}
+
+
+variable "private_cluster_enabled" {
+  description = "Enable private AKS cluster"
+  type        = bool
+  default     = true
+}
+
+variable "use_custom_private_dns" {
+  description = "Use custom private DNS zone instead of System"
+  type        = bool
+  default     = false
+}
+
+variable "private_dns_zone_id" {
+  description = "Custom private DNS zone ID (required if use_custom_private_dns = true)"
+  type        = string
+  default     = null
+}
+
+variable "azure_policy_enabled" {
+  description = "Enable Azure Policy addon for AKS"
+  type        = bool
+  default     = false
+}
+
+variable "enable_monitoring" {
+  type    = bool
+  default = false
+}
+
+variable "node_resource_group_name" {
+  type = string
+}
+
+variable "enable_key_vault_csi" {
+  type    = bool
+  default = false
+}
+
+variable "key_vault_id" {
   type = string
 }

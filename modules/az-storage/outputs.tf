@@ -19,17 +19,33 @@ output "container_names" {
   value = keys(azurerm_storage_container.containers)
 }
 
+# output "container_urls" {
+#   value = {
+#     for k, v in azurerm_storage_container.containers :
+#     k => "${azurerm_storage_account.storage_account.primary_blob_endpoint}/${v.name}"
+#   }
+# }
+
 output "container_urls" {
   value = {
     for k, v in azurerm_storage_container.containers :
-    k => "${azurerm_storage_account.storage_account.primary_blob_endpoint}/${v.name}"
+    k => "${trim(azurerm_storage_account.storage_account.primary_blob_endpoint, "/")}/${v.name}"
   }
 }
+
+# output "sas_urls" {
+#   value = var.enable_sas ? {
+#     for c in var.containers :
+#     c => "${azurerm_storage_account.storage_account.primary_blob_endpoint}/${c}?${data.azurerm_storage_account_sas.sas[0].sas}"
+#   } : {}
+
+#   sensitive = true
+# }
 
 output "sas_urls" {
   value = var.enable_sas ? {
     for c in var.containers :
-    c => "${azurerm_storage_account.storage_account.primary_blob_endpoint}/${c}?${data.azurerm_storage_account_sas.sas[0].sas}"
+    c => "${azurerm_storage_account.storage_account.primary_blob_endpoint}${c}?${data.azurerm_storage_account_sas.sas[0].sas}"
   } : {}
 
   sensitive = true
