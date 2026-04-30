@@ -30,7 +30,7 @@ locals {
 
 
         source_address_prefixes = [
-          "10.0.1.0/27" # appservice CIDR
+          "172.21.7.0/27" # appservice CIDR
         ]
         source_port_range          = "*"
         destination_address_prefix = "*"
@@ -79,7 +79,7 @@ locals {
         access    = "Allow"
         protocol  = "Tcp"
         source_address_prefixes = [
-          "10.0.1.0/27" # Aks Nodes CIDR
+          "172.21.7.0/27" # Aks Nodes CIDR
         ]
         source_port_range          = "*"
         destination_address_prefix = "*"
@@ -89,7 +89,7 @@ locals {
       }
     ]
 
-    "hub-jumpbox" = [
+    "be-jumpbox" = [
       {
         name                       = "allow-rdp-ssh"
         priority                   = 100

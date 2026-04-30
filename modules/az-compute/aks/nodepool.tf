@@ -1,6 +1,8 @@
 resource "azurerm_kubernetes_cluster_node_pool" "extra" {
 
-  for_each = var.node_pools
+  # for_each = var.node_pools
+
+  for_each = var.enable_worker_nodepool ? var.node_pools : {}
 
   name                  = each.value.name
   kubernetes_cluster_id = azurerm_kubernetes_cluster.aks.id

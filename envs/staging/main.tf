@@ -84,11 +84,6 @@ module "virtual_network" {
         cidr = ["10.0.0.128/26"]
         tags = { type = "infra" }
       }
-
-      jumpbox = {
-        cidr = ["10.0.1.0/27"]
-        tags = { type = "workload" }
-      }
     }
 
     fe = {
@@ -119,6 +114,10 @@ module "virtual_network" {
       private_endpoint = {
         cidr = ["172.21.5.0/27"]
         tags = { type = "infra" }
+      }
+      jumpbox = {
+        cidr = ["172.21.7.0/27"]
+        tags = { type = "workload" }
       }
     }
   }
@@ -345,60 +344,60 @@ module "appservice_storage_account" {
 }
 
 # Storage - Storage Account{for mssql VA & Audit}
-# module "mssql_storage_account" {
-#   source = "../../modules/az-storage"
+module "mssql_storage_account" {
+  source = "../../modules/az-storage"
 
-#   storage_account_name = var.mssql_storage_account_name
+  storage_account_name = var.mssql_storage_account_name
 
-#   location            = module.rg.resource_group_location
-#   resource_group_name = module.rg.resource_group_name
+  location            = module.rg.resource_group_location
+  resource_group_name = module.rg.resource_group_name
 
-#   tags = merge(module.rg.tags, {
-#     purpose = "mssql-logging"
-#   })
+  tags = merge(module.rg.tags, {
+    purpose = "mssql-logging"
+  })
 
-#   account_kind          = "StorageV2"
-#   account_tier          = "Standard"
-#   replication_type      = "LRS"
-#   dns_endpoint_type     = "Standard"
-#   public_network_access = true
+  account_kind          = "StorageV2"
+  account_tier          = "Standard"
+  replication_type      = "LRS"
+  dns_endpoint_type     = "Standard"
+  public_network_access = true
 
-#   allowed_ip_rules = ["49.37.211.93"]
+  allowed_ip_rules = ["49.37.211.93"]
 
-#   allowed_subnet_ids = [
-#     module.virtual_network.subnet_lookup["db"]
-#   ]
+  allowed_subnet_ids = [
+    module.virtual_network.subnet_lookup["db"]
+  ]
 
-#   blob_versioning_enabled = false
+  blob_versioning_enabled = false
 
-#   blob_delete_retention_days      = 1
-#   container_delete_retention_days = 1
+  blob_delete_retention_days      = 1
+  container_delete_retention_days = 1
 
-#   /* List of storage containers to create inside the storage account (each item becomes one container) */
-#   containers = [
-#     "sqldbauditlogs",
-#     "sql-va-logs"
-#   ]
+  /* List of storage containers to create inside the storage account (each item becomes one container) */
+  containers = [
+    "sqldbauditlogs",
+    "sql-va-logs"
+  ]
 
-#   # Lifecycle Enabled (multi-rule)
-#   lifecycle_rules = [
-#     {
-#       name   = "audit-retention"
-#       prefix = ["sqldbauditlogs"]
-#       days   = 1
-#     },
-#     {
-#       name   = "va-retention"
-#       prefix = ["sql-va-logs"]
-#       days   = 1
-#     }
-#   ]
+  # Lifecycle Enabled (multi-rule)
+  lifecycle_rules = [
+    {
+      name   = "audit-retention"
+      prefix = ["sqldbauditlogs"]
+      days   = 1
+    },
+    {
+      name   = "va-retention"
+      prefix = ["sql-va-logs"]
+      days   = 1
+    }
+  ]
 
-#   depends_on = [ 
-#     module.virtual_network
-#    ]
+  depends_on = [
+    module.virtual_network
+  ]
 
-# }
+}
 
 # Security - Key Vault
 module "key_vault" {
@@ -417,7 +416,7 @@ module "key_vault" {
   create_access_policy_me = false
 
   /* standard = basic features, premium = supports HSM-backed keys */
-  sku_name = "standard" # Standard or Premium
+  sku_name = "premium" # Standard or Premium
 
   soft_delete_retention_days = 7 /* days to retain deleted items (7–90) */
   purge_protection_enabled   = false /* true = prevents permanent deletion, false = allows purge */
@@ -425,7 +424,7 @@ module "key_vault" {
   enabled_for_deployment          = true /* true = allows VM deployment access */
   enabled_for_template_deployment = true /* true = allows ARM template access */
 
-  enable_private_endpoint = false
+  enable_private_endpoint = true
   private_subnet_id       = module.virtual_network.subnet_lookup["private_endpoint"]
   private_dns_zone_id     = module.private_dns.zone_ids["privatelink.vaultcore.azure.net"]
 
@@ -489,318 +488,318 @@ module "key_vault" {
 }
 
 # Network Security - Azure Bastion
-# module "bastion" {
-#   source = "../../modules/az-bastion"
+module "bastion" {
+  source = "../../modules/az-bastion"
 
-#   env = local.env
+  env = local.env
 
-#   resource_group_name = module.rg.resource_group_name
-#   location            = module.rg.resource_group_location
-#   tags                = module.rg.tags
+  resource_group_name = module.rg.resource_group_name
+  location            = module.rg.resource_group_location
+  tags                = module.rg.tags
 
-#   subnet_id = module.virtual_network.subnet_lookup["AzureBastionSubnet"] /* dedicated Bastion subnet */
+  subnet_id = module.virtual_network.subnet_lookup["AzureBastionSubnet"] /* dedicated Bastion subnet */
 
-#   sku = "Standard" /* Basic or Standard (Standard = more features) */
+  sku = "Standard" /* Basic or Standard (Standard = more features) */
 
-#   tunneling_enabled  = true /* true = allows native client (SSH/RDP) via Bastion */
-#   ip_connect_enabled = true /* true = connect using private IP */
-#   copy_paste_enabled = true /* true = enable clipboard */
-#   file_copy_enabled  = true /* true = allow file transfer */
+  tunneling_enabled  = true /* true = allows native client (SSH/RDP) via Bastion */
+  ip_connect_enabled = true /* true = connect using private IP */
+  copy_paste_enabled = true /* true = enable clipboard */
+  file_copy_enabled  = true /* true = allow file transfer */
 
-#   zones = null /* null = no zone redundancy, ["1","2","3"] = zone redundant */
+  zones = null /* null = no zone redundancy, ["1","2","3"] = zone redundant */
 
-#   kerberos_enabled = false /* true = enable Kerberos auth, false = disabled */
+  kerberos_enabled = false /* true = enable Kerberos auth, false = disabled */
 
-#   depends_on = [
-#     module.virtual_network
-#    ]
-# }
+  depends_on = [
+    module.virtual_network
+  ]
+}
 
 
 # Linux VM Deployment Module
 /* Creates one or more Linux VMs with networking, disks, identity, and optional integrations (LB, ASG, Backup, Diagnostics) */
-# module "jumpbox_linux_vm" {
-#   source = "../../modules/az-compute/linux_vm_jh"
+module "jumpbox_linux_vm" {
+  source = "../../modules/az-compute/linux_vm_jh"
 
-#   env      = local.env
-#   workload = local.workload
+  env      = local.env
+  workload = local.workload
 
-#   resource_group_name = module.rg.resource_group_name
-#   location            = module.rg.resource_group_location
-#   tags                = module.rg.tags
+  resource_group_name = module.rg.resource_group_name
+  location            = module.rg.resource_group_location
+  tags                = module.rg.tags
 
-#   vm_name  = "${local.env}-jumpbox-lnx01"
-#   vm_count = 1
+  vm_name  = "${local.env}-jumpbox-linux"
+  vm_count = 1
 
-#   vm_size   = "Standard_B2s_v2"
-#   image_sku = "18.04-LTS"
+  vm_size   = "Standard_B2s_v2"
+  image_sku = "18.04-LTS"
 
-#   subnet_id = module.virtual_network.subnet_lookup["jumpbox"]
+  subnet_id = module.virtual_network.subnet_lookup["jumpbox"]
 
-#   private_ip_allocation = "Dynamic"
+  private_ip_allocation = "Dynamic"
 
-#   os_disk_storage_type = "Standard_LRS"
-#   os_disk_size_gb      = 127
+  os_disk_storage_type = "Standard_LRS"
+  os_disk_size_gb      = 127
 
-#   enable_public_ip = true /* true  → VM gets public IP (direct internet access) */
+  enable_public_ip = false /* true  → VM gets public IP (direct internet access) */
 
-#   enable_availability_set = false /* true  → VMs distributed across fault/update domains (HA within region) */
+  enable_availability_set = false /* true  → VMs distributed across fault/update domains (HA within region) */
 
-#   availability_set_name = "biztalk-avset"
+  availability_set_name = "biztalk-avset"
 
-#   zones = null /* ["1","2","3"] → zone-based high availability; null/empty → no zone (regional deployment) */
+  zones = null /* ["1","2","3"] → zone-based high availability; null/empty → no zone (regional deployment) */
 
-#   enable_boot_diagnostics               = true
-#   boot_diagnostics_mode                 = "existing" /* "none", "existing", or "create" */
-#   boot_diagnostics_storage_account_name = module.diag_storage_account.storage_account_name
+  enable_boot_diagnostics               = true
+  boot_diagnostics_mode                 = "existing" /* "none", "existing", or "create" */
+  boot_diagnostics_storage_account_name = module.diag_storage_account.storage_account_name
 
-#   /*Fetches admin credentials from Key Vault instead of hardcoding
-#   Helps secure VM username/password */
-#   key_vault_id                       = module.key_vault.key_vault_id # change manually when needed; ensure this KV exists and has the necessary secrets for admin username and password
-#   localadmin_credentials_secret_name = "localadmin-credentials"
+  /*Fetches admin credentials from Key Vault instead of hardcoding
+  Helps secure VM username/password */
+  key_vault_id                       = module.key_vault.key_vault_id # change manually when needed; ensure this KV exists and has the necessary secrets for admin username and password
+  localadmin_credentials_secret_name = "localadmin-credentials"
 
-#   # Authentication method
-#   /* true  → only SSH login (recommended for production)
-#    false → password + SSH allowed */
-#   disable_password_authentication = false
+  # Authentication method
+  /* true  → only SSH login (recommended for production)
+   false → password + SSH allowed */
+  disable_password_authentication = false
 
-#   ssh_public_key_secret_name = "linux-ssh-public-key" /* SSH public key stored in Key Vault */
+  ssh_public_key_secret_name = "linux-ssh-public-key" /* SSH public key stored in Key Vault */
 
-#   enable_asg = false
+  enable_asg = false
 
-#   # enable_lb = false                                         /* true  → attaches VM NICs to Load Balancer backend pool */
+  # enable_lb = false                                         /* true  → attaches VM NICs to Load Balancer backend pool */
 
-#   # Scenario 1: Existing LB
-#   # lb_name              = "existing-lb-name"
-#   # lb_backend_pool_name = "backend-pool-name"
+  # Scenario 1: Existing LB
+  # lb_name              = "existing-lb-name"
+  # lb_backend_pool_name = "backend-pool-name"
 
-#   # Scenario 2: New LB scenario (created in same Terraform)
-#   # lb_backend_pool_id = module.loadbalancer.backend_pool_id        # null
+  # Scenario 2: New LB scenario (created in same Terraform)
+  # lb_backend_pool_id = module.loadbalancer.backend_pool_id        # null
 
-#   # Data disks (optional)
-#   /*
-#   data_disks = [
-#     {
-#       # size_gb = 128
-#       # lun     = 0
-#       # caching = "ReadWrite"
-#       # storage_type = "Standard_LRS"
-#     }
-#   ] 
-#   */
+  # Data disks (optional)
+  /*
+  data_disks = [
+    {
+      # size_gb = 128
+      # lun     = 0
+      # caching = "ReadWrite"
+      # storage_type = "Standard_LRS"
+    }
+  ] 
+  */
 
-#   # Backup configuration
-#   enable_backup = false /* true  → enables VM backup using Recovery Services Vault */
+  # Backup configuration
+  enable_backup = false /* true  → enables VM backup using Recovery Services Vault */
 
-#   # Recovery Serivce Vault Configuration
-#   recovery_services_vault_name = "existing-rsv"
-#   backup_policy_vm             = "existing-policy"
+  # Recovery Serivce Vault Configuration
+  recovery_services_vault_name = "existing-rsv"
+  backup_policy_vm             = "existing-policy"
 
-#   # Ensure dependencies are created before VM
-#   depends_on = [
-#     module.key_vault,
-#     module.diag_storage_account,
-#     module.virtual_network
-#   ]
-# }
+  # Ensure dependencies are created before VM
+  depends_on = [
+    module.key_vault,
+    module.diag_storage_account,
+    module.virtual_network
+  ]
+}
 
-# module "mssql" {
-#   source = "../../modules/az-compute/rds/mssql"
+module "mssql" {
+  source = "../../modules/az-compute/rds/mssql"
 
-#   env      = local.env
-#   workload = local.workload
+  env      = local.env
+  workload = local.workload
 
-#   # Basic Identity
-#   server_name   = "${local.env}-${local.workload}-sql1"
-#   database_name = "${local.env}_${local.workload}_db1"
+  # Basic Identity
+  server_name   = "${local.env}-${local.workload}-sql1"
+  database_name = "${local.env}_${local.workload}_db1"
 
-#   resource_group_name = module.rg.resource_group_name
-#   location            = module.rg.resource_group_location
-#   tags                = module.rg.tags
+  resource_group_name = module.rg.resource_group_name
+  location            = module.rg.resource_group_location
+  tags                = module.rg.tags
 
-#   # Server Config
-#   server_version = "12.0"
+  # Server Config
+  server_version = "12.0"
 
-#   /* Pricing tier
-#      Examples:
-#      Basic → dev/test
-#      S0/S1 → small workloads
-#      GP_* → General Purpose (recommended)
-#      BC_* → Business Critical (high IO + HA) */
-#   sku_name = "Basic"
+  /* Pricing tier
+     Examples:
+     Basic → dev/test
+     S0/S1 → small workloads
+     GP_* → General Purpose (recommended)
+     BC_* → Business Critical (high IO + HA) */
+  sku_name = "Basic"
 
-#   max_size_gb = 2
+  max_size_gb = 2
 
-#   # Collation for sorting/comparison
-#   collation = "SQL_Latin1_General_CP1_CI_AS"
+  # Collation for sorting/comparison
+  collation = "SQL_Latin1_General_CP1_CI_AS"
 
-#   # Zone redundancy (multi-zone HA)
-#   zone_redundant = false
+  # Zone redundancy (multi-zone HA)
+  zone_redundant = false
 
-#   # Read scale (read-only replicas)
-#   read_scale = false
+  # Read scale (read-only replicas)
+  read_scale = false
 
-#   # Storage type
-#   # Local → cheaper
-#   # Geo → geo-redundant backup
-#   storage_account_type = "Local"
+  # Storage type
+  # Local → cheaper
+  # Geo → geo-redundant backup
+  storage_account_type = "Local"
 
-#   storage_account_id = module.mssql_storage_account.storage_account_id
+  storage_account_id = module.mssql_storage_account.storage_account_id
 
-#   # Authentication (from Key Vault)
-#   key_vault_id    = module.key_vault.key_vault_id
-#   sql_secret_name = "mssql-credentials"
+  # Authentication (from Key Vault)
+  key_vault_id    = module.key_vault.key_vault_id
+  sql_secret_name = "mssql-credentials"
 
-#   enable_aad_admin        = false
-#   azuread_admin_username  = "AzureAD Admin"
-#   azuread_admin_object_id = null
+  enable_aad_admin        = false
+  azuread_admin_username  = "AzureAD Admin"
+  azuread_admin_object_id = null
 
 
-#   # Network Mode (UAT/PROD toggle)
-#   enable_public_access    = true # PROD → false (private only), UAT → can be true if needed
-#   enable_private_endpoint = true
-#   private_subnet_id       = module.virtual_network.subnet_lookup["private_endpoint"]
-#   private_dns_zone_id     = module.private_dns.zone_ids["privatelink.database.windows.net"]
+  # Network Mode (UAT/PROD toggle)
+  enable_public_access    = true # PROD → false (private only), UAT → can be true if needed
+  enable_private_endpoint = true
+  private_subnet_id       = module.virtual_network.subnet_lookup["private_endpoint"]
+  private_dns_zone_id     = module.private_dns.zone_ids["privatelink.database.windows.net"]
 
-#   # Service Endpoint
-#   enable_service_endpoint_mssql = false
-#   app_subnet_id                 = module.virtual_network.subnet_lookup["db"]
+  # Service Endpoint
+  enable_service_endpoint_mssql = false
+  app_subnet_id                 = module.virtual_network.subnet_lookup["db"]
 
-#   allowed_ips = ["49.37.211.93"] # only used if public enabled
+  allowed_ips = ["49.37.211.93"] # only used if public enabled
 
-#   # TDE (Encryption) /* false = system managed key */
-#   enable_tde       = false
-#   use_cmk_tde      = false
-#   key_vault_key_id = null
-#   # key_vault_key_id = module.key_vault.sql_tde_key_id
+  # TDE (Encryption) /* false = system managed key */
+  enable_tde       = false
+  use_cmk_tde      = false
+  key_vault_key_id = null
+  # key_vault_key_id = module.key_vault.sql_tde_key_id
 
 
-#   # Auditing
-#   enable_auditing        = false
-#   audit_storage_endpoint = module.mssql_storage_account.primary_blob_endpoint
-#   audit_retention_days   = 1
+  # Auditing
+  enable_auditing        = false
+  audit_storage_endpoint = module.mssql_storage_account.primary_blob_endpoint
+  audit_retention_days   = 1
 
 
-#   # Security Alerts
-#   enable_security_alerts = false
-#   alert_retention_days   = 1
-#   alerts_state           = "Enabled"
+  # Security Alerts
+  enable_security_alerts = false
+  alert_retention_days   = 1
+  alerts_state           = "Enabled"
 
-#   # Email Accounts
-#   email_account_admins = false
-#   email_addresses = [
-#     "dba@company.com",
-#     "cloudops@company.com",
-#     "security@company.com"
-#   ]
+  # Email Accounts
+  email_account_admins = false
+  email_addresses = [
+    "dba@company.com",
+    "cloudops@company.com",
+    "security@company.com"
+  ]
 
-#   # Vulnerability Assessment
-#   enable_va = false
-#   va_state  = false # or "Disabled"
+  # Vulnerability Assessment
+  enable_va = false
+  va_state  = false # or "Disabled"
 
-#   va_storage_container = module.mssql_storage_account.container_urls["sql-va-logs"]
-#   va_storage_key       = module.mssql_storage_account.primary_access_key
+  va_storage_container = module.mssql_storage_account.container_urls["sql-va-logs"]
+  va_storage_key       = module.mssql_storage_account.primary_access_key
 
 
-#   # Backup / LTR
-#   short_term_retention_days = 7
+  # Backup / LTR
+  short_term_retention_days = 7
 
-#   enable_long_term_retention = false
+  enable_long_term_retention = false
 
-#   ltr_weekly_retention  = "P4W"
-#   ltr_monthly_retention = "P12M"
-#   ltr_yearly_retention  = "P3Y"
-#   ltr_week_of_year      = 1
+  ltr_weekly_retention  = "P4W"
+  ltr_monthly_retention = "P12M"
+  ltr_yearly_retention  = "P3Y"
+  ltr_week_of_year      = 1
 
 
-#   # Optional Features
-#   enable_outbound_firewall = false
+  # Optional Features
+  enable_outbound_firewall = false
 
-#   # Dependencies
-#   depends_on = [
-#     module.key_vault,
-#     module.virtual_network,
-#     module.mssql_storage_account,
-#     module.private_dns
-#   ]
-# }
+  # Dependencies
+  depends_on = [
+    module.key_vault,
+    module.virtual_network,
+    module.mssql_storage_account,
+    module.private_dns
+  ]
+}
 
-# module "acr" {
-#   source = "../../modules/az-acr"
+module "acr" {
+  source = "../../modules/az-acr"
 
-#   # Basic Identity
-#   env      = local.env
-#   workload = local.workload
+  # Basic Identity
+  env      = local.env
+  workload = local.workload
 
-#   acr_name            = "${local.env}${local.workload}acr01"
-#   resource_group_name = module.rg.resource_group_name
-#   location            = module.rg.resource_group_location
-#   tags                = module.rg.tags
+  acr_name            = "${local.env}${local.workload}acr01"
+  resource_group_name = module.rg.resource_group_name
+  location            = module.rg.resource_group_location
+  tags                = module.rg.tags
 
-#   # SKU (Critical Control)
-#   /* Allowed: Basic | Standard | Premium (case-sensitive) */
-#   sku = "Standard"
+  # SKU (Critical Control)
+  /* Allowed: Basic | Standard | Premium (case-sensitive) */
+  sku = "Premium"
 
-#   # Access Control
-#   admin_enabled = false
+  # Access Control
+  admin_enabled = false
 
 
 
-#   # WARNING:
-#   /* Public access enabled for UAT/debugging.
-#   Set false in PROD when using Private Endpoint only. */
-#   public_network_access_enabled = true
+  # WARNING:
+  /* Public access enabled for UAT/debugging.
+  Set false in PROD when using Private Endpoint only. */
+  public_network_access_enabled = true
 
-#   allowed_ips = []
+  allowed_ips = ["49.37.211.93/32"]
 
-#   identity_type = "SystemAssigned"
+  identity_type = "SystemAssigned"
 
-#   # Networking Features
-#   /* Note:
-#      These features are PREMIUM-only in real Azure behavior; Keep "true" only if premimum SKU is used.
-#      Validation in module should block invalid SKU usage. */
-#   #---
-#   /* If enabled (true), identity must be "UserAssigned" for Key Vault CMK integration */
-#   enable_cmk = false
+  # Networking Features
+  /* Note:
+     These features are PREMIUM-only in real Azure behavior; Keep "true" only if premimum SKU is used.
+     Validation in module should block invalid SKU usage. */
+  #---
+  /* If enabled (true), identity must be "UserAssigned" for Key Vault CMK integration */
+  enable_cmk = false
 
-#   /* Key Vault Key ID used for CMK encryption (Premium only).
-#   Set only when enable_cmk = true, otherwise keep null */
-#   acr_cmk_id = null
+  /* Key Vault Key ID used for CMK encryption (Premium only).
+  Set only when enable_cmk = true, otherwise keep null */
+  acr_cmk_id = null
 
-#   /* enable below id only in Premium CMK setup: */
-#   # acr_cmk_id = module.key_vault.acr_cmk_id 
+  /* enable below id only in Premium CMK setup: */
+  # acr_cmk_id = module.key_vault.acr_cmk_id 
 
 
-#   enable_data_endpoint  = false
-#   enable_georeplication = false
+  enable_data_endpoint  = false
+  enable_georeplication = false
 
-#   enable_private_endpoint = false
-#   private_subnet_id       = module.virtual_network.subnet_lookup["private_endpoint"]
-#   private_dns_zone_id     = module.private_dns.zone_ids["privatelink.azurecr.io"]
+  enable_private_endpoint = true
+  private_subnet_id       = module.virtual_network.subnet_lookup["private_endpoint"]
+  private_dns_zone_id     = module.private_dns.zone_ids["privatelink.azurecr.io"]
 
-#   zone_redundancy_enabled = false
-#   #---
-#   /* Image Lifecycle: Cleanup of untagged images only */
-#   enable_retention_policy = false
-#   retention_days          = 7
+  zone_redundancy_enabled = false
+  #---
+  /* Image Lifecycle: Cleanup of untagged images only */
+  enable_retention_policy = false
+  retention_days          = 7
 
-#   # Security Policies
-#   export_policy_enabled  = true /* Controls whether ACR images can be exported to external storage (e.g., Azure Blob for backup/archival) */
-#   anonymous_pull_enabled = false /* Allows unauthenticated (public) pull access to container images when enabled */
+  # Security Policies
+  export_policy_enabled  = true /* Controls whether ACR images can be exported to external storage (e.g., Azure Blob for backup/archival) */
+  anonymous_pull_enabled = false /* Allows unauthenticated (public) pull access to container images when enabled */
 
-#   # Identity-based access (future)
-#   enable_token       = true /* Enables ACR token-based authentication for fine-grained access control using scope maps */
-#   key_vault_id_token = module.key_vault.key_vault_id
+  # Identity-based access (future)
+  enable_token       = true /* Enables ACR token-based authentication for fine-grained access control using scope maps */
+  key_vault_id_token = module.key_vault.key_vault_id
 
-#   # Slack / Teams / CI pipeline hook
-#   enable_webhook = false /* Enables ACR webhook notifications for events like image push/pull (e.g., Slack/CI/CD integration) */
-#   webhook_uri    = "https://hooks.slack.com/services/XXXX" /*  Endpoint URL where ACR sends event notifications when webhook is enabled */
+  # Slack / Teams / CI pipeline hook
+  enable_webhook = false /* Enables ACR webhook notifications for events like image push/pull (e.g., Slack/CI/CD integration) */
+  webhook_uri    = "https://hooks.slack.com/services/XXXX" /*  Endpoint URL where ACR sends event notifications when webhook is enabled */
 
-#   depends_on = [
-#     module.virtual_network,
-#     module.private_dns
-#   ]
-# }
+  depends_on = [
+    module.virtual_network,
+    module.private_dns
+  ]
+}
 
 module "action_group" {
   source = "../../modules/az-action_group"
@@ -842,224 +841,228 @@ module "log_analytics" {
   immediate_data_purge_on_30_days_enabled = false
 }
 
-# module "aks" {
-#   source = "../../modules/az-compute/aks"
+module "aks" {
+  source = "../../modules/az-compute/aks"
 
 
-#   env      = local.env
-#   workload = local.workload
+  env      = local.env
+  workload = local.workload
 
-#   name                = "${local.env}-${local.workload}-aks"
-#   resource_group_name = module.rg.resource_group_name
-#   location            = module.rg.resource_group_location
-#   tags                = module.rg.tags
+  name                = "${local.env}-${local.workload}-aks"
+  resource_group_name = module.rg.resource_group_name
+  location            = module.rg.resource_group_location
+  tags                = module.rg.tags
 
-#   kubernetes_version = "1.35"
+  kubernetes_version = "1.35"
 
-#   sku_tier = "Standard"
-
-
-#   dns_prefix = "${local.env}aks"
-
-#   # Case 1 — Private AKS (System DNS)
-#   private_cluster_enabled = true
-#   use_custom_private_dns  = false
-
-#   # Case 2 — Private AKS (Custom DNS)
-#   # private_cluster_enabled             = true
-#   # use_custom_private_dns              = true
-#   # private_dns_zone_id                 = module.private_dns.private_dns_zone_id
-
-#   # Case 3 — Public AKS
-#   # private_cluster_enabled             = false
-#   # use_custom_private_dns              = false
-
-#   enable_maintenance_window = false
-#   automatic_upgrade_channel = null /* patch/rapid/node-image/stable/null  */
-#   node_os_upgrade_channel   = "None" /* Unmanaged/SecurityPatch/NodeImage/None */
-
-#   api_server_access_profile = {
-#     authorized_ip_ranges = [/* Set of authorized IP ranges to allow access to API server */
-#       "10.0.1.0/27",
-#       "49.37.211.93"
-#     ]
-#   }
-
-#   auto_scaler_profile = {
-#     /* When multiple node pools are similar (same size/labels), AKS cluster autoscaler tries to distribute scale-out across them instead of scaling only one pool. */
-#     balance_similar_node_groups = false
-#   }
-
-#   aad_rbac = {
-#     enabled            = true
-#     azure_rbac_enabled = true
-#   }
-
-#   role_based_access_control_enabled = true
-
-#   disk_encryption_set_id = null
-
-#   http_application_routing_enabled = false
-
-#   identity = {
-#     /* AKS cluster managed identity (control plane identity);
-#     Used for Azure resource operations (LB, networking, node pools);
-#     Azure creates and manages this automatically */
-#     type = "SystemAssigned"
-#   }
-
-#   /* Node (kubelet) managed identity
-#   # Used by AKS nodes to access Azure resources
-#   # Examples: pull images from ACR, mount disks/files
-#   # Empty {} = Azure auto-creates and manages it */
-#   kubelet_identity = {}
-
-#   /* Forces authentication via Azure AD (Entra ID) instead of static credentials */
-#   local_account_disabled = true
-
-#   acr_id = module.acr.acr_id
-
-#   enable_defender = false
-
-#   defender_workspace_id = null
-#   # defender_workspace_id = module.log_analytics.workspace_id
-#   # defender_workspace_id = "/subscriptions/xxx/resourceGroups/rg/providers/Microsoft.OperationalInsights/workspaces/ws"
+  sku_tier = "Standard"
 
 
 
-#   network_profile = {
-#     network_plugin = "azure"
-#     network_policy = "calico"
-#   }
 
-#   /* Enables AKS to publish an OIDC identity endpoint for secure token-based authentication */
-#   oidc_issuer_enabled = true
+  # Case 1 — Private AKS (System DNS)
+  private_cluster_enabled = true
+  use_custom_private_dns  = false
 
-#   /* Allows pods to use Azure AD Workload Identity to access Azure resources without secrets */
-#   workload_identity_enabled = true
+  # Case 2 — Private AKS (Custom DNS)
+  # private_cluster_enabled             = true
+  # use_custom_private_dns              = true
+  # private_dns_zone_id                 = module.private_dns.zone_ids["privatelink.centralindia.azmk8s.io"]  
 
-#   # Case: 1
-#   # enable_oms_agent           = false
-#   # log_analytics_workspace_id = null
+  # Case 3 — Public AKS
+  # private_cluster_enabled             = false
+  # use_custom_private_dns              = false
+   
+   dns_prefix              = "${local.env}aks"
 
-#   # Case: 2 
-#   enable_oms_agent = true
-#   log_analytics_workspace_id = module.log_analytics.workspace_id
+  enable_maintenance_window = false
+  automatic_upgrade_channel = null /* patch/rapid/node-image/stable/null  */
+  node_os_upgrade_channel   = "None" /* Unmanaged/SecurityPatch/NodeImage/None */
 
-#   storage_profile = {
-#     blob_driver_enabled = true
-#   }
+  api_server_access_profile = {
+    authorized_ip_ranges = [/* Set of authorized IP ranges to allow access to API server */
+      "10.0.1.0/27",
+      "49.37.211.93"
+    ]
+  }
 
-#   support_plan = "KubernetesOfficial"
+  auto_scaler_profile = {
+    /* When multiple node pools are similar (same size/labels), AKS cluster autoscaler tries to distribute scale-out across them instead of scaling only one pool. */
+    balance_similar_node_groups = true
+  }
 
-#   run_command_enabled = false
+  aad_rbac = {
+    enabled            = true
+    azure_rbac_enabled = true
+  }
 
-#   node_resource_group_name = "${local.env}-${local.workload}-aks-node-rg"
+  role_based_access_control_enabled = true
 
-#   enable_key_vault_csi = true
+  disk_encryption_set_id = null
 
-#   key_vault_id = module.key_vault.key_vault_id
+  http_application_routing_enabled = false
 
-#   # NODE POOL (optional inline structure)
-#   default_node_pool = {
-#     name                 = "system"
-#     node_count           = 1
-#     vm_size              = "Standard_B2s_v2"
-#     auto_scaling_enabled = true
-#     min_count            = 1
-#     max_count            = 3
-#     vnet_subnet_id       = module.virtual_network.subnet_lookup["aks"]
-#   }
+  identity = {
+    /* AKS cluster managed identity (control plane identity);
+    Used for Azure resource operations (LB, networking, node pools);
+    Azure creates and manages this automatically */
+    type = "SystemAssigned"
+  }
 
-#   # NODE POOLS (extra)
-#   node_pools = {
-#     workernode = {
-#       name                 = "workernode1"
-#       vm_size              = "Standard_B2s_v2"
-#       node_count           = 1
-#       auto_scaling_enabled = true
-#       min_count            = 1
-#       max_count            = 3
-#       vnet_subnet_id       = module.virtual_network.subnet_lookup["aks"]
-#     }
-#   }
+  /* Node (kubelet) managed identity
+  # Used by AKS nodes to access Azure resources
+  # Examples: pull images from ACR, mount disks/files
+  # Empty {} = Azure auto-creates and manages it */
+  kubelet_identity = {}
 
-#   # EXTENSIONS
+  /* Forces authentication via Azure AD (Entra ID) instead of static credentials */
+  local_account_disabled = true
 
-#   extensions = {}
+  acr_id = module.acr.acr_id
 
-#   # extensions = {
-#   #   container-storage = {
-#   #     type = "AzureContainerStorage"
-#   #   }
+  enable_defender = false
 
-#   #   backup = {
-#   #     type = "AzureBackup"
-#   #   }
-
-#   #   network-insights = {
-#   #     type = "ContainerNetworkObservability"
-#   #   }
-
-#   #   app-config = {
-#   #     type = "AzureAppConfigurationKubernetesProvider"
-#   #   }
-#   # }
+  defender_workspace_id = null
+  # defender_workspace_id = module.log_analytics.workspace_id
+  # defender_workspace_id = "/subscriptions/xxx/resourceGroups/rg/providers/Microsoft.OperationalInsights/workspaces/ws"
 
 
 
-#   # DEPLOYMENT SAFEGUARD
-#   # Case 1 — Safeguard OFF, Policy OFF
-#   # azure_policy_enabled  = false
-#   # deployment_safeguard  = null
+  network_profile = {
+    network_plugin = "azure"
+    network_policy = "calico"
+  }
 
-#   # Case 2 — Safeguard ON (REQUIRED: Policy ON)
-#   azure_policy_enabled = true
-#   deployment_safeguard = {
-#     level = "Warn" /* "Warn"/"Enforce" */
-#   }
+  /* Enables AKS to publish an OIDC identity endpoint for secure token-based authentication */
+  oidc_issuer_enabled = true
 
-#   # TRUSTED ACCESS
-#   enable_trusted_access = false
-#   trusted_access = {
-#     backup_service = {
-#       name               = "backup"
-#       source_resource_id = "/subscriptions/xxx/providers/Microsoft.DataProtection/backupVaults/vault1"
-#       roles              = ["Microsoft.DataProtection/backupVaults/backup/read"]
-#     }
-#   }
+  /* Allows pods to use Azure AD Workload Identity to access Azure resources without secrets */
+  workload_identity_enabled = true
 
-#   depends_on = [
-#     module.rg,
-#     module.virtual_network,
-#     module.key_vault,
-#     module.acr,
-#     module.private_dns,
-#     module.log_analytics,
-#   ]
-# }
+  # Case: 1
+  # enable_oms_agent           = false
+  # log_analytics_workspace_id = null
 
-# module "aks_monitoring" {
-#   source = "../../modules/az-compute/aks/monitoring"
+  # Case: 2 
+  enable_oms_agent           = true
+  log_analytics_workspace_id = module.log_analytics.workspace_id
 
-#   enabled = false
+  storage_profile = {
+    blob_driver_enabled = true
+  }
 
-#   aks_dcr_name        = "${module.aks.aks_name}-dcr-balanced"
-#   aks_dcr_association = "${module.aks.aks_name}-dcr-association"
+  support_plan = "KubernetesOfficial"
 
-#   location                   = module.rg.resource_group_location
-#   resource_group_name        = module.rg.resource_group_name
-#   log_analytics_workspace_id = module.log_analytics.workspace_id
-#   aks_id                     = module.aks.aks_id
+  run_command_enabled = false
 
-#   action_group_id = module.action_group.id
+  node_resource_group_name = "${local.env}-${local.workload}-aks-node-rg"
 
-#   depends_on = [
-#     module.aks,
-#     module.action_group,
-#     module.log_analytics
-#   ]
-# }
+  enable_key_vault_csi = true
+
+  key_vault_id = module.key_vault.key_vault_id
+
+  # NODE POOL (optional inline structure)
+  default_node_pool = {
+    name                 = "system"
+    node_count           = 1
+    vm_size              = "Standard_B2s_v2"
+    auto_scaling_enabled = false
+    min_count            = 1
+    max_count            = 3
+    vnet_subnet_id       = module.virtual_network.subnet_lookup["aks"]
+  }
+
+  enable_worker_nodepool = false
+
+  # NODE POOLS (extra)
+  node_pools = {
+    workernode = {
+      name                 = "workernode1"
+      vm_size              = "Standard_D2s_v4"
+      node_count           = 1
+      auto_scaling_enabled = false
+      min_count            = 1
+      max_count            = 3
+      vnet_subnet_id       = module.virtual_network.subnet_lookup["aks"]
+    }
+  }
+
+  # EXTENSIONS
+
+  extensions = {}
+
+  # extensions = {
+  #   container-storage = {
+  #     type = "AzureContainerStorage"
+  #   }
+
+  #   backup = {
+  #     type = "AzureBackup"
+  #   }
+
+  #   network-insights = {
+  #     type = "ContainerNetworkObservability"
+  #   }
+
+  #   app-config = {
+  #     type = "AzureAppConfigurationKubernetesProvider"
+  #   }
+  # }
+
+
+
+  # DEPLOYMENT SAFEGUARD
+  # Case 1 — Safeguard OFF, Policy OFF
+  azure_policy_enabled = false
+  deployment_safeguard = null
+
+  # Case 2 — Safeguard ON (REQUIRED: Policy ON)
+  # azure_policy_enabled = true
+  # deployment_safeguard = {
+  #   level = "Warn" /* "Warn"/"Enforce" */
+  # }
+
+  # TRUSTED ACCESS
+  enable_trusted_access = false
+  trusted_access = {
+    backup_service = {
+      name               = "backup"
+      source_resource_id = "/subscriptions/xxx/providers/Microsoft.DataProtection/backupVaults/vault1"
+      roles              = ["Microsoft.DataProtection/backupVaults/backup/read"]
+    }
+  }
+
+  depends_on = [
+    module.rg,
+    module.virtual_network,
+    module.key_vault,
+    module.acr,
+    module.private_dns,
+    module.log_analytics,
+  ]
+}
+
+module "aks_monitoring" {
+  source = "../../modules/az-compute/aks/monitoring"
+
+  enabled = true
+
+  aks_dcr_name        = "${module.aks.aks_name}-dcr-balanced"
+  aks_dcr_association = "${module.aks.aks_name}-dcr-association"
+
+  location                   = module.rg.resource_group_location
+  resource_group_name        = module.rg.resource_group_name
+  log_analytics_workspace_id = module.log_analytics.workspace_id
+  aks_id                     = module.aks.aks_id
+
+  action_group_id = module.action_group.id
+
+  depends_on = [
+    module.aks,
+    module.action_group,
+    module.log_analytics
+  ]
+}
 
 # Linux App Service Plan
 module "appservice_plan_linux" {

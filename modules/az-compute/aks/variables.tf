@@ -255,3 +255,8 @@ variable "enable_key_vault_csi" {
 variable "key_vault_id" {
   type = string
 }
+
+variable "enable_worker_nodepool" {
+  type    = bool
+  default = false
+}

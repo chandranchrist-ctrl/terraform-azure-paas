@@ -18,7 +18,6 @@ resource "azurerm_kubernetes_cluster" "aks" {
   private_cluster_public_fqdn_enabled = var.private_cluster_enabled ? false : null
   private_dns_zone_id                 = var.private_cluster_enabled ? (var.use_custom_private_dns ? var.private_dns_zone_id : "System") : null
 
-
   automatic_upgrade_channel = var.automatic_upgrade_channel
   node_os_upgrade_channel   = var.node_os_upgrade_channel
 
