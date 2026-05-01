@@ -38,3 +38,15 @@ terraform.rc
 
 **/deployment.yml
 **/combined.txt
+
+# Terraform state
+*.tfstate
+*.tfstate.*
+terraform.tfstate
+terraform.tfstate.backup
+
+# Terraform plan
+*.tfplan
+
+# HCL (optional)
+*.hcl

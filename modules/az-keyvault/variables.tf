@@ -124,3 +124,11 @@ variable "private_dns_zone_id" {
   type    = string
   default = null
 }
+
+variable "owner_group_id" {
+  type    = string
+}
+
+variable "devops_group_id" {
+  type    = string
+}

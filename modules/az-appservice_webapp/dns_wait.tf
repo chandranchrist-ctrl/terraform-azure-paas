@@ -8,11 +8,3 @@ resource "time_sleep" "wait_for_dns" {
 
   create_duration = "180s"
 }
-
-# resource "time_sleep" "wait_for_kv_access" {
-#   depends_on = [
-#     azurerm_role_assignment.kv_appservice_access
-#   ]
-
-#   create_duration = "60s"
-# }

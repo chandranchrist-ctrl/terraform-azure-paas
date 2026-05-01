@@ -5,47 +5,13 @@ locals {
     # Rules for app subnet (example: allow HTTP & HTTPS traffic)
     "be-aks" = [
       {
-        name      = "allow-appservice-to-aks"
-        priority  = 100
-        direction = "Inbound"
-        access    = "Allow"
-        protocol  = "Tcp"
-
-
-        source_address_prefixes = [
-          "10.1.1.64/26" # appservice CIDR
-        ]
-        source_port_range          = "*"
-        destination_address_prefix = "*"
-        destination_port_ranges    = ["80", "443"]
-        source_asg                 = null
-        dest_asg                   = null
-      },
-      {
-        name      = "allow-jumpbox-to-aks"
-        priority  = 101
-        direction = "Inbound"
-        access    = "Allow"
-        protocol  = "Tcp"
-
-
-        source_address_prefixes = [
-          "172.21.7.0/27" # appservice CIDR
-        ]
-        source_port_range          = "*"
-        destination_address_prefix = "*"
-        destination_port_ranges    = ["80", "443"]
-        source_asg                 = null
-        dest_asg                   = null
-      },
-      {
-        name                    = "deny-backend-appl"
-        priority                = 1003
+        name                    = "all-allow"
+        priority                = 100
         direction               = "Inbound"
-        access                  = "Deny"
+        access                  = "Allow"
         protocol                = "Tcp"
         source_port_range       = "*"
-        destination_port_ranges = ["80", "443"]
+        destination_port_range = "*"
 
         source_address_prefix      = "*"
         destination_address_prefix = "*"

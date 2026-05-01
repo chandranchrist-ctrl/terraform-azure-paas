@@ -9,3 +9,7 @@ output "prod_url" {
 output "uat_url" {
   value = "https://${var.uat_hostname}.${var.domain}"
 }
+
+output "app_insights_connection_string" {
+  value = try(azurerm_application_insights.app[0].connection_string, null)
+}

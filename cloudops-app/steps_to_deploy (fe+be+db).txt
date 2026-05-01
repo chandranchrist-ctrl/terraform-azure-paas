@@ -1,0 +1,231 @@
+STEP 1 — DATABASE SETUP (MSSQL)
+------------------------------
+
+1.1 Connect to your SQL Server
+------------------------------
+
+Use: SSMS / Azure Data Studio Or any SQL client
+
+1.2 Create DB (if not created)
+------------------------------
+
+CREATE DATABASE CloudOpsDB;
+
+1.3 Use DB
+----------
+
+USE CloudOpsDB;
+
+CREATE TABLE Tasks (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Title NVARCHAR(255) NOT NULL,
+    Status NVARCHAR(50) DEFAULT 'Pending',
+    CreatedAt DATETIME DEFAULT GETDATE()
+);
+
+VERIFY DB
+---------
+
+SELECT * FROM Tasks;
+
+    ✔ Should return empty table
+
+------------------------------------------------------------------------------------------
+
+STEP 2 — AKS BACKEND DEPLOYMENT
+-------------------------------
+
+2.1 Build & push Docker image
+-----------------------------
+
+docker build -t uatbookshopacr01.azurecr.io/backend:v1 ./backend
+docker push uatbookshopacr01.azurecr.io/backend:v1
+
+VERIFY IMAGE: az acr repository list --name uatbookshopacr01.azurecr.io
+
+2.2 Attach ACR to AKS (IMPORTANT)
+---------------------------------
+
+AKS → ACR Authentication Verification (Managed Identity):
+-----------------------------------------------------------
+
+az aks show --name uat-bookshop-aks --resource-group uat-rg --query identity
+
+Expected Output:
+
+  "identityProfile": {
+    "kubeletidentity": {
+      "clientId": "",
+      "objectId": "",
+      "resourceId": ""
+    }
+  }
+
+Get ACR Resource ID: az acr show --name uatbookshopacr01 --query id -o tsv
+
+Store in variable (PowerShell): $acrId = az acr show --name uatbookshopacr01 --query id -o tsv
+
+Verify Role Assignment (AKS → ACR): az role assignment list   --assignee 059293f1-91ed-4e87-ab77-12843ac50a09   --scope $acrId
+
+Expected Output
+
+{
+  "roleDefinitionName": "AcrPull"
+}
+
+  2.3 Create DB Secret
+  --------------------
+
+  Edit k8s/secret.yaml:
+
+  stringData:
+  DB_USER: "your-user"
+  DB_PASSWORD: "your-password"
+  DB_SERVER: "your-sql-server"
+  DB_NAME: "CloudOpsDB"
+
+  Apply: 
+  az aks get-credentials --resource-group uat-rg --name uat-bookshop-aks
+  kubectl apply -f k8s/secret.yaml
+
+  VERIFY SECRET:  kubectl get secret db-secret
+
+  2.4 Deploy Backend
+  ------------------
+
+  kubectl apply -f k8s/deployment.yaml
+  kubectl apply -f k8s/service.yaml
+
+  VERIFY POD:  kubectl get pods
+
+    Status = Running
+
+2.5 Install NGINX Ingress (PRIVATE)
+-----------------------------------
+
+curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+
+helm install ingress-nginx ingress-nginx/ingress-nginx \
+  --namespace ingress-nginx \
+  --create-namespace \
+  --set controller.service.type=LoadBalancer \
+  --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-internal"="true"
+
+helm repo list
+helm search repo ingress-nginx
+kubectl get pods -n ingress-nginx
+
+VERIFY PRIVATE IP: kubectl get svc -n ingress-nginx
+
+2.6 Deploy Ingress
+------------------
+
+kubectl apply -f k8s/ingress.yaml
+
+VERIFY INGRESS: kubectl get ingress
+
+     - Should show ADDRESS = private IP
+
+2.7 Test Backend
+----------------
+
+From VM / AKS node / jumpbox:
+
+    curl http://backend.local/health
+    curl http://10.0.88.51/health
+
+✔ Expected:
+
+    { "backend": "UP" }
+
+2.8 Test DB from Backend
+------------------------
+
+curl http://<PRIVATE-IP>/health/db
+
+✔ Expected:
+
+    { "db": "UP" }
+
+------------------------------------------------------------------------------------------
+
+STEP 3 — FRONTEND (APP SERVICE)
+------------------------------
+
+3.1 Prepare ZIP
+---------------
+
+Zip contents of:
+
+    frontend/
+        app.js
+        package.json
+
+3.2 Deploy to App Service
+-------------------------
+
+    Options:
+        Zip Deploy
+        FTP
+        Azure Portal upload
+
+3.3 Configure App Service
+-------------------------
+    In Configuration → Application Settings:
+        API_URL = http://<AKS-PRIVATE-IP>
+
+3.4 Startup command
+-------------------
+    node app.js
+
+3.5 Make sure VNet Integration is done (Same VNet as AKS OR peered)
+
+VERIFY FRONTEND:
+----------------
+
+1. Health check:
+----------------
+    https://<appservice>/health
+
+✔ Expected:
+
+{ "frontend": "UP" }
+
+2. Backend connectivity test
+----------------------------
+SSH into App Service:
+
+    curl $API_URL/health
+
+✔ Must return backend response
+
+------------------------------------------------------------------------------------------
+
+STEP 4 — END-TO-END TEST
+------------------------
+
+4.1 Open UI
+------------
+
+    https://<appservice>
+
+4.2 Test flow
+-------------
+
+    1. Enter task
+    2. Click Add
+    3. Click Refresh
+
+EXPECTED RESULT:
+
+    Task appears in UI
+    Data stored in DB
+
+4.3 Verify in DB
+----------------
+SELECT * FROM Tasks ORDER BY CreatedAt DESC;
+
+✔ Data should exist

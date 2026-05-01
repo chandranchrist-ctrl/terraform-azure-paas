@@ -5,12 +5,12 @@ locals {
   scm_action = "Allow"
 
   app_settings_common = {
-    API_URL = "https://aks-backend-url"
+    API_URL = "http://172.21.0.34"
   }
 
-  app_insights_settings = var.enable_app_insights ? {
-    APPLICATIONINSIGHTS_CONNECTION_STRING = var.app_insights_connection_string
-  } : {}
+app_insights_settings = var.enable_app_insights ? {
+  APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.app[0].connection_string
+} : {}
 
   # PROD (DEFAULT WEB APP)
   app_settings_prod = merge(
@@ -39,7 +39,7 @@ locals {
     use_32_bit_worker                 = false
     node_version                      = "18-lts"
     websockets_enabled                = true
-    app_command_line                  = "pm2 serve /home/site/wwwroot --no-daemon"
+    app_command_line                  = "node app.js"
     health_check_path                 = "/health"
     health_check_eviction_time_in_min = 10
     ftps_state                        = "FtpsOnly"

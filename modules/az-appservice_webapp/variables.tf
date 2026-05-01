@@ -121,11 +121,46 @@ variable "ip_restrictions" {
   default = []
 }
 
-variable "enable_app_insights" {
-  type    = bool
-  default = true
-}
-
 variable "storage_account_id" {
   type = string
+}
+
+variable "owner_group_id" {
+  type = string
+}
+
+variable "devops_group_id" {
+  type = string
+}
+
+###
+
+variable "enable_app_insights" {
+  type    = bool
+  default = false
+}
+
+variable "app_insights_name" {
+  type    = string
+  default = null
+}
+
+variable "log_analytics_workspace_id" {
+  type    = string
+  default = null
+}
+
+variable "sampling_percentage" {
+  type    = number
+  default = 100
+}
+
+variable "retention_in_days" {
+  type    = number
+  default = 30
+}
+
+variable "action_group_id" {
+  type    = string
+  default = null
 }

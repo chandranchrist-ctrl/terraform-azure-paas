@@ -15,10 +15,6 @@ resource "azurerm_key_vault_key" "sql_tde_key" {
     "wrapKey",
     "unwrapKey"
   ]
-
-  depends_on = [
-    time_sleep.rbac_propagation
-  ]
 }
 
 resource "azurerm_key_vault_key" "acr_cmk" {
@@ -34,9 +30,5 @@ resource "azurerm_key_vault_key" "acr_cmk" {
     "verify",
     "wrapKey",
     "unwrapKey"
-  ]
-
-  depends_on = [
-    time_sleep.rbac_propagation
   ]
 }

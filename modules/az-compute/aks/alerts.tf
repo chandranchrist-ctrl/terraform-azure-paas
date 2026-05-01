@@ -1,9 +1,7 @@
-############################################
 # POD NOT RUNNING (PERSISTENT FAILURE ONLY)
-############################################
 resource "azurerm_monitor_scheduled_query_rules_alert_v2" "pod_not_running" {
 
-  count = var.enabled ? 1 : 0
+  count = var.enable_monitoring ? 1 : 0
 
   name                = "aks-pod-not-running"
   resource_group_name = var.resource_group_name
@@ -29,19 +27,17 @@ KQL
     operator                = "GreaterThan"
   }
 
-  action {
-    action_groups = [var.action_group_id]
-  }
+  # action {
+  #   action_groups = [var.action_group_id]
+  # }
 
   description = "Persistent pod failure detected"
 }
 
-############################################
 # CRASH / FAILED PODS (DEBOUNCED ALERT)
-############################################
 resource "azurerm_monitor_scheduled_query_rules_alert_v2" "crashloop" {
 
-  count = var.enabled ? 1 : 0
+  count = var.enable_monitoring ? 1 : 0
 
   name                = "aks-crashloop"
   resource_group_name = var.resource_group_name
@@ -67,19 +63,17 @@ KQL
     operator                = "GreaterThan"
   }
 
-  action {
-    action_groups = [var.action_group_id]
-  }
+  # action {
+  #   action_groups = [var.action_group_id]
+  # }
 
   description = "Sustained crash loop detected"
 }
 
-############################################
 # RESTART SPIKE (ROLLING + THRESHOLD BASED)
-############################################
 resource "azurerm_monitor_scheduled_query_rules_alert_v2" "restart_spike" {
 
-  count = var.enabled ? 1 : 0
+  count = var.enable_monitoring ? 1 : 0
 
   name                = "aks-pod-restarts"
   resource_group_name = var.resource_group_name
@@ -104,19 +98,17 @@ KQL
     operator                = "GreaterThan"
   }
 
-  action {
-    action_groups = [var.action_group_id]
-  }
+  # action {
+  #   action_groups = [var.action_group_id]
+  # }
 
   description = "Persistent restart instability detected"
 }
 
-############################################
 # NODE NOT READY (INFRASTRUCTURE HEALTH)
-############################################
 resource "azurerm_monitor_scheduled_query_rules_alert_v2" "node_not_ready" {
 
-  count = var.enabled ? 1 : 0
+  count = var.enable_monitoring ? 1 : 0
 
   name                = "aks-node-not-ready"
   resource_group_name = var.resource_group_name
@@ -142,9 +134,9 @@ KQL
     operator                = "GreaterThan"
   }
 
-  action {
-    action_groups = [var.action_group_id]
-  }
+  # action {
+  #   action_groups = [var.action_group_id]
+  # }
 
   description = "Node stability issue detected"
 }

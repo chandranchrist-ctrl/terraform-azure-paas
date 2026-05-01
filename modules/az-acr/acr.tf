@@ -18,11 +18,9 @@ resource "azurerm_container_registry" "acr" {
     type = var.identity_type
   }
 
-  # PREMIUM ONLY FEATURE
   data_endpoint_enabled   = var.enable_data_endpoint
   zone_redundancy_enabled = var.zone_redundancy_enabled
 
-  # Retention
   retention_policy_in_days = var.enable_retention_policy ? var.retention_days : null
 
   dynamic "encryption" {
@@ -31,17 +29,6 @@ resource "azurerm_container_registry" "acr" {
       key_vault_key_id = var.acr_cmk_id
     }
   }
-
-  # network_rule_set {
-  #   default_action = "Deny"
-
-  #   ip_rule = [
-  #     for ip in var.allowed_ips : {
-  #       action   = "Allow"
-  #       ip_range = ip
-  #     }
-  #   ]
-  # }
 
   dynamic "georeplications" {
     for_each = var.enable_georeplication ? var.replica_locations : []

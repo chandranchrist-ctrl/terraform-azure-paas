@@ -1,6 +1,6 @@
 resource "azurerm_monitor_data_collection_rule" "aks" {
 
-  count = var.enabled ? 1 : 0
+  count = var.enable_monitoring ? 1 : 0
 
   name                = var.aks_dcr_name
   location            = var.location
@@ -48,9 +48,9 @@ resource "azurerm_monitor_data_collection_rule" "aks" {
 
 resource "azurerm_monitor_data_collection_rule_association" "aks" {
 
-  count = var.enabled ? 1 : 0
+  count = var.enable_monitoring ? 1 : 0
 
   name                    = var.aks_dcr_association
-  target_resource_id      = var.aks_id
+  target_resource_id      = azurerm_kubernetes_cluster.aks.id
   data_collection_rule_id = azurerm_monitor_data_collection_rule.aks[0].id
 }

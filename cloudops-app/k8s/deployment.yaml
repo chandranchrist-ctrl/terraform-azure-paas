@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: uatbookshopacr01.azurecr.io/backend:v1   # 🔥 REPLACE THIS
+        ports:
+        - containerPort: 3000
+
+        envFrom:
+        - secretRef:
+            name: db-secret
+
+        # ✅ Health checks
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+
+
+
+# kubectl apply -f ./deployment.yaml

@@ -25,7 +25,5 @@ resource "azurerm_key_vault" "kv" {
     ip_rules                   = var.allowed_ip_ranges
     virtual_network_subnet_ids = var.allowed_subnet_ids
   }
-
   tags = var.tags
-
 }

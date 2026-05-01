@@ -23,14 +23,6 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
   azure_policy_enabled = var.azure_policy_enabled
 
-  # dynamic "api_server_access_profile" {
-  #   for_each = var.api_server_access_profile != null ? [var.api_server_access_profile] : []
-
-  #   content {
-  #     authorized_ip_ranges = api_server_access_profile.value.authorized_ip_ranges
-  #   }
-  # }
-
   dynamic "key_vault_secrets_provider" {
     for_each = var.enable_key_vault_csi ? [1] : []
     content {

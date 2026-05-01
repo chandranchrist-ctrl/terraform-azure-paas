@@ -193,3 +193,11 @@ variable "acr_cmk_id" {
     error_message = "CMK enabled but Key Vault Key ID is missing."
   }
 }
+
+variable "owner_group_id" {
+    type    = string
+}
+
+variable "devops_group_id" {
+    type    = string
+}

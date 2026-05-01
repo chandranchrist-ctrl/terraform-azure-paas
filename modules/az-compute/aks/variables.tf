@@ -186,11 +186,6 @@ variable "enable_oms_agent" {
   default = false
 }
 
-variable "log_analytics_workspace_id" {
-  type    = string
-  default = null
-}
-
 variable "enable_backup_trusted_access" {
   type    = bool
   default = false
@@ -238,11 +233,6 @@ variable "azure_policy_enabled" {
   default     = false
 }
 
-variable "enable_monitoring" {
-  type    = bool
-  default = false
-}
-
 variable "node_resource_group_name" {
   type = string
 }
@@ -259,4 +249,44 @@ variable "key_vault_id" {
 variable "enable_worker_nodepool" {
   type    = bool
   default = false
+}
+
+variable "subnet_id" {
+  type = string
+}
+
+variable "owner_group_id" {
+  type = string
+}
+
+variable "devops_group_id" {
+  type = string
+}
+
+
+# Monitoring
+variable "enable_monitoring" {
+  type    = bool
+  default = false
+}
+
+variable "log_analytics_workspace_id" {
+  type    = string
+  default = null
+}
+
+variable "aks_dcr_name" {
+  type    = string
+  default = null
+}
+
+variable "aks_dcr_association" {
+  type    = string
+  default = null
+}
+
+variable "action_group_id" {
+  description = "Action Group ID for alert notifications"
+  type        = string
+  default     = null
 }
