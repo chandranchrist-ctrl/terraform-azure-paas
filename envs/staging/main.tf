@@ -26,7 +26,7 @@ provider "azurerm" {
 # Local values for environment-specific naming
 locals {
   env      = "uat"
-  workload = "bookshop"
+  workload = "cloudops"
 }
 
 # Reusable module to create Resource Group
@@ -1079,8 +1079,8 @@ module "app_service" {
 
   # 5. DOMAIN / DNS / CERT
   domain        = "hbcdev.co.in"
-  prod_hostname = "bookshop"
-  uat_hostname  = "uat-bookshop"
+  prod_hostname = "cloudops"
+  uat_hostname  = "uat-cloudops"
 
   key_vault_id        = module.key_vault.key_vault_id
   key_vault_secret_id = module.key_vault.certificate_secret_ids["wildcard-cert"]

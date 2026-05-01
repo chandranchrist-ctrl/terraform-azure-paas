@@ -14,7 +14,7 @@ CREATE DATABASE CloudOpsDB;
 1.3 Use DB
 ----------
 
-USE CloudOpsDB;
+USE uat_cloudops_db1;
 
 CREATE TABLE Tasks (
     Id INT IDENTITY(1,1) PRIMARY KEY,
@@ -82,7 +82,7 @@ Expected Output
   DB_USER: "your-user"
   DB_PASSWORD: "your-password"
   DB_SERVER: "your-sql-server"
-  DB_NAME: "CloudOpsDB"
+  DB_NAME: "uat_cloudops_db1"
 
   Apply: 
   az aks get-credentials --resource-group uat-rg --name uat-bookshop-aks
@@ -120,16 +120,7 @@ kubectl get pods -n ingress-nginx
 
 VERIFY PRIVATE IP: kubectl get svc -n ingress-nginx
 
-2.6 Deploy Ingress
-------------------
-
-kubectl apply -f k8s/ingress.yaml
-
-VERIFY INGRESS: kubectl get ingress
-
-     - Should show ADDRESS = private IP
-
-2.7 Test Backend
+2.6 Test Backend
 ----------------
 
 From VM / AKS node / jumpbox:
@@ -141,7 +132,7 @@ From VM / AKS node / jumpbox:
 
     { "backend": "UP" }
 
-2.8 Test DB from Backend
+2.7 Test DB from Backend
 ------------------------
 
 curl http://<PRIVATE-IP>/health/db
