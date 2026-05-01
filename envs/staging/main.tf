@@ -232,7 +232,7 @@ module "key_vault" {
   tags                = module.rg.tags
 
   owner_group_id  = module.access.group_ids["kv_admins"]
-  devops_group_id = module.access.group_ids["kv_devops"]  
+  devops_group_id = module.access.group_ids["kv_devops"]
 
   /* false = uses access policies, true = uses RBAC */
   rbac_authorization_enabled = true
@@ -256,7 +256,7 @@ module "key_vault" {
   public_network_access_enabled = true /* true = allows public access, false = private only */
 
   network_acls_default_action = "Deny" /* Deny = block all except allowed, Allow = open access */
-  allowed_ip_ranges           = ["49.37.211.93/32"] /* allowed public IPs */
+  allowed_ip_ranges           = var.allowed_ips # ["49.37.211.93/32"] /* allowed public IPs */
 
   /*   For subnet restrictions, ensure the subnets exist and are correctly referenced.
   service_endpoints = ["Microsoft.KeyVault"] is enabled on those subnets in the network module. */
@@ -342,7 +342,7 @@ module "diag_storage_account" {
     module.virtual_network.subnet_lookup["db"]
   ]
 
-  allowed_ip_rules = ["49.37.211.93"] /* allows access from specific public IPs */
+  allowed_ip_rules = var.allowed_ips_plain # ["49.37.211.93"] /* allows access from specific public IPs */
 
   # Lifecycle Enabled
   /* lifecycle_rules = [] - lifecycle NOT needed → empty or omitted */
@@ -378,7 +378,7 @@ module "mssql_storage_account" {
   dns_endpoint_type     = "Standard"
   public_network_access = true
 
-  allowed_ip_rules = ["49.37.211.93"]
+  allowed_ip_rules = var.allowed_ips_plain #  ["49.37.211.93"]
 
   allowed_subnet_ids = [
     module.virtual_network.subnet_lookup["db"]
@@ -442,7 +442,7 @@ module "appservice_storage_account" {
     module.virtual_network.subnet_lookup["app"]
   ]
 
-  allowed_ip_rules = ["49.37.211.93"] /* allows access from specific public IPs */
+  allowed_ip_rules = var.allowed_ips_plain # ["49.37.211.93"] /* allows access from specific public IPs */
 
   /* List of storage containers to create inside the storage account (each item becomes one container) */
   containers = [
@@ -699,7 +699,7 @@ module "mssql" {
   enable_service_endpoint_mssql = false
   app_subnet_id                 = module.virtual_network.subnet_lookup["db"]
 
-  allowed_ips = ["49.37.211.93"] # only used if public enabled
+  allowed_ips = var.allowed_ips_plain # ["49.37.211.93"] # only used if public enabled
 
   # TDE (Encryption) /* false = system managed key */
   enable_tde       = false
@@ -771,13 +771,13 @@ module "acr" {
   location            = module.rg.resource_group_location
   tags                = module.rg.tags
 
- # 2. ACCESS (AAD GROUPS)
+  # 2. ACCESS (AAD GROUPS)
   owner_group_id  = module.access.group_ids["acr_admins"]
   devops_group_id = module.access.group_ids["acr_devops"]
 
   # 3. SKU & CORE SETTINGS
   /* Allowed: Basic | Standard | Premium (case-sensitive) */
-  sku = "Standard"
+  sku           = "Standard"
   admin_enabled = false
 
   identity_type = "SystemAssigned"
@@ -786,7 +786,7 @@ module "acr" {
   /* Public access enabled for UAT/debugging; Set false in PROD when using Private Endpoint only. */
   public_network_access_enabled = true
 
-  allowed_ips = ["49.37.211.93/32"]
+  allowed_ips = var.allowed_ips # ["49.37.211.93/32"]
 
   # 5. PRIVATE NETWORKING (OPTIONAL)
   enable_private_endpoint = false
@@ -798,11 +798,11 @@ module "acr" {
   acr_cmk_id = null
   # acr_cmk_id = module.key_vault.acr_cmk_id   
 
-  enable_data_endpoint  = false
-  enable_georeplication = false
+  enable_data_endpoint    = false
+  enable_georeplication   = false
   zone_redundancy_enabled = false
 
-   # 7. IMAGE MANAGEMENT: /* Image Lifecycle: Cleanup of untagged images only */
+  # 7. IMAGE MANAGEMENT: /* Image Lifecycle: Cleanup of untagged images only */
   enable_retention_policy = false
   retention_days          = 7
 
@@ -844,11 +844,11 @@ module "aks" {
 
   # 3. VERSION & SKU
   kubernetes_version = "1.35"
-  sku_tier = "Standard"
+  sku_tier           = "Standard"
 
   # 4. NETWORKING MODE
-  dns_prefix              = "${local.env}aks"  
-  
+  dns_prefix = "${local.env}aks"
+
   # Case 1 — Private AKS (System DNS)
   private_cluster_enabled = true
   use_custom_private_dns  = false
@@ -863,13 +863,13 @@ module "aks" {
   # use_custom_private_dns              = false
 
   # --- API Access ---
-    api_server_access_profile = {
-    authorized_ip_ranges = [/* Set of authorized IP ranges to allow access to API server */
-      "10.0.1.0/27",
-      "49.37.211.93"
-    ]
+  api_server_access_profile = {
+    authorized_ip_ranges = concat(
+      ["10.0.1.0/27"],
+      var.allowed_ips
+    )
   }
-   
+
   network_profile = {
     network_plugin = "azure"
     network_policy = "calico"
@@ -897,17 +897,17 @@ module "aks" {
   role_based_access_control_enabled = true
 
   # 6. INTEGRATIONS  
-  acr_id = module.acr.acr_id
+  acr_id               = module.acr.acr_id
   enable_key_vault_csi = true
-  key_vault_id = module.key_vault.key_vault_id  
+  key_vault_id         = module.key_vault.key_vault_id
 
 
   # 7. PLATFORM FEATURES (MISSING ONES)
-  disk_encryption_set_id = null
+  disk_encryption_set_id           = null
   http_application_routing_enabled = false
 
   # 8. MONITORING & LOGGING
-  enable_monitoring           = true
+  enable_monitoring = true
 
   # Case: 1
   # enable_oms_agent           = false
@@ -981,11 +981,11 @@ module "aks" {
   /* Allows pods to use Azure AD Workload Identity to access Azure resources without secrets */
   workload_identity_enabled = true
 
-  support_plan = "KubernetesOfficial"
-  run_command_enabled = false  
+  support_plan        = "KubernetesOfficial"
+  run_command_enabled = false
 
   # 14. EXTENSIONS
-  extensions = {}    
+  extensions = {}
 
   # 15. POLICY & SAFEGUARD
   # Case 1 — Safeguard OFF, Policy OFF
@@ -1066,9 +1066,9 @@ module "app_service" {
   identity_type                 = "SystemAssigned"
 
   # 4. NETWORKING
-  subnet_id           = module.virtual_network.subnet_lookup["app"]
+  subnet_id = module.virtual_network.subnet_lookup["app"]
 
-    ip_restrictions = [
+  ip_restrictions = [
     {
       name       = "office-ip"
       ip_address = "49.37.211.93/32"
@@ -1083,7 +1083,7 @@ module "app_service" {
   uat_hostname  = "uat-bookshop"
 
   key_vault_id        = module.key_vault.key_vault_id
-  key_vault_secret_id = module.key_vault.certificate_secret_ids["wildcard-cert"]  
+  key_vault_secret_id = module.key_vault.certificate_secret_ids["wildcard-cert"]
   godaddy_secret_name = "godaddy-apikey"
 
   # 6. STORAGE / LOGGING
@@ -1093,9 +1093,9 @@ module "app_service" {
   http_logs_sas_url = module.appservice_storage_account.container_urls["http-logs"]
 
   # 7. MONITORING (TOGGLE ZONE)
-  enable_app_insights = false
-  app_insights_name            = "${local.env}${local.workload}-appi"
-  log_analytics_workspace_id   = module.log_analytics.workspace_id
+  enable_app_insights        = false
+  app_insights_name          = "${local.env}${local.workload}-appi"
+  log_analytics_workspace_id = module.log_analytics.workspace_id
 
   action_group_id = module.action_group.id
 

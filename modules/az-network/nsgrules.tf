@@ -5,12 +5,12 @@ locals {
     # Rules for app subnet (example: allow HTTP & HTTPS traffic)
     "be-aks" = [
       {
-        name                    = "all-allow"
-        priority                = 100
-        direction               = "Inbound"
-        access                  = "Allow"
-        protocol                = "Tcp"
-        source_port_range       = "*"
+        name                   = "all-allow"
+        priority               = 100
+        direction              = "Inbound"
+        access                 = "Allow"
+        protocol               = "Tcp"
+        source_port_range      = "*"
         destination_port_range = "*"
 
         source_address_prefix      = "*"

@@ -20,3 +20,15 @@ variable "appservice_storage_account_name" {
 variable "mssql_storage_account_name" {
   type = string
 }
+
+variable "allowed_ips" {
+  description = "Allowed IPs for ACR firewall"
+  type        = list(string)
+  default     = []
+}
+
+variable "allowed_ips_plain" {
+  description = "Allowed IPs for ACR firewall"
+  type        = list(string)
+  default     = []
+}

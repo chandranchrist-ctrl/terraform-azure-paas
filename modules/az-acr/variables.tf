@@ -195,9 +195,9 @@ variable "acr_cmk_id" {
 }
 
 variable "owner_group_id" {
-    type    = string
+  type = string
 }
 
 variable "devops_group_id" {
-    type    = string
+  type = string
 }

@@ -8,9 +8,9 @@ locals {
     API_URL = "http://172.21.0.34"
   }
 
-app_insights_settings = var.enable_app_insights ? {
-  APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.app[0].connection_string
-} : {}
+  app_insights_settings = var.enable_app_insights ? {
+    APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.app[0].connection_string
+  } : {}
 
   # PROD (DEFAULT WEB APP)
   app_settings_prod = merge(
