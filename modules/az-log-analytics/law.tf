@@ -1,4 +1,7 @@
 resource "azurerm_log_analytics_workspace" "law" {
+
+  count = var.create_law ? 1 : 0
+
   name                = var.name
   location            = var.location
   resource_group_name = var.resource_group_name

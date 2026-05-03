@@ -18,7 +18,7 @@ provider "azurerm" {
 
   features {
     resource_group {
-      prevent_deletion_if_contains_resources = true
+      prevent_deletion_if_contains_resources = false
     }
   }
 }
@@ -82,15 +82,20 @@ module "virtual_network" {
     fe = {
       app = {
         cidr = ["10.1.1.64/26"]
-        tags = { type = "workload" }
+
+        tags = {
+          type = "workload"
+        }
 
         delegation = {
-          name         = "delegation"
-          service_name = "Microsoft.Web/serverFarms"
+          name = "delegation"
 
-          actions = [
-            "Microsoft.Network/virtualNetworks/subnets/action"
-          ]
+          service_delegation = {
+            name = "Microsoft.Web/serverFarms"
+            actions = [
+              "Microsoft.Network/virtualNetworks/subnets/action"
+            ]
+          }
         }
       }
     }
@@ -486,15 +491,16 @@ module "log_analytics" {
   env      = local.env
   workload = local.workload
 
+  create_law = true
+
   name                = "${local.env}-${local.workload}-law-main" # -> UAT; Workspace for per environment.
   location            = module.rg.resource_group_location
   resource_group_name = module.rg.resource_group_name
   tags                = module.rg.tags
 
-  # IAM control
-  create_monitoring_group = true
-  monitoring_group_name   = "app-monitoring-readers"
-  add_current_user        = true
+  # ACCESS (AAD GROUPS)
+  owner_group_id  = module.access.group_ids["law_admins"]
+  devops_group_id = module.access.group_ids["law_devops"]
 
   sku               = "PerGB2018"
   retention_in_days = 30
@@ -508,45 +514,45 @@ module "log_analytics" {
 }
 
 # Observability - Common Action Group
-module "action_group" {
-  source = "../../modules/az-action_group"
+# module "action_group" {
+#   source = "../../modules/az-action_group"
 
-  name                = "${local.env}-common-alerts"
-  short_name          = "alerts"
-  resource_group_name = module.rg.resource_group_name
+#   name                = "${local.env}-common-alerts"
+#   short_name          = "alerts"
+#   resource_group_name = module.rg.resource_group_name
 
-  emails = [
-    "chandranchrist@gmail.com"
-  ]
-}
+#   emails = [
+#     "chandranchrist@gmail.com"
+#   ]
+# }
 
 # Network Security - Azure Bastion
-module "bastion" {
-  source = "../../modules/az-bastion"
+# module "bastion" {
+#   source = "../../modules/az-bastion"
 
-  env = local.env
+#   env = local.env
 
-  resource_group_name = module.rg.resource_group_name
-  location            = module.rg.resource_group_location
-  tags                = module.rg.tags
+#   resource_group_name = module.rg.resource_group_name
+#   location            = module.rg.resource_group_location
+#   tags                = module.rg.tags
 
-  subnet_id = module.virtual_network.subnet_lookup["AzureBastionSubnet"] /* dedicated Bastion subnet */
+#   subnet_id = module.virtual_network.subnet_lookup["AzureBastionSubnet"] /* dedicated Bastion subnet */
 
-  sku = "Standard" /* Basic or Standard (Standard = more features) */
+#   sku = "Standard" /* Basic or Standard (Standard = more features) */
 
-  tunneling_enabled  = true /* true = allows native client (SSH/RDP) via Bastion */
-  ip_connect_enabled = true /* true = connect using private IP */
-  copy_paste_enabled = true /* true = enable clipboard */
-  file_copy_enabled  = true /* true = allow file transfer */
+#   tunneling_enabled  = true /* true = allows native client (SSH/RDP) via Bastion */
+#   ip_connect_enabled = true /* true = connect using private IP */
+#   copy_paste_enabled = true /* true = enable clipboard */
+#   file_copy_enabled  = true /* true = allow file transfer */
 
-  zones = null /* null = no zone redundancy, ["1","2","3"] = zone redundant */
+#   zones = null /* null = no zone redundancy, ["1","2","3"] = zone redundant */
 
-  kerberos_enabled = false /* true = enable Kerberos auth, false = disabled */
+#   kerberos_enabled = false /* true = enable Kerberos auth, false = disabled */
 
-  depends_on = [
-    module.virtual_network
-  ]
-}
+#   depends_on = [
+#     module.virtual_network
+#   ]
+# }
 
 # Linux JumpHost VM Deployment Module
 /* Creates one or more Linux VMs with networking, disks, identity, and optional integrations (LB, ASG, Backup, Diagnostics) */
@@ -772,7 +778,8 @@ module "acr" {
   tags                = module.rg.tags
 
   # 2. ACCESS (AAD GROUPS)
-  owner_group_id  = module.access.group_ids["acr_admins"]
+  owner_group_id  = module.access.group_ids["acr_owner"]
+  admin_group_id  = module.access.group_ids["acr_admins"]
   devops_group_id = module.access.group_ids["acr_devops"]
 
   # 3. SKU & CORE SETTINGS
@@ -1049,7 +1056,7 @@ module "app_service" {
   env      = local.env
   workload = local.workload
 
-  name                = "${local.env}-${local.workload}-fe-lnx-webapp"
+  name                = "${local.workload}-fe-lnx-webapp"
   location            = module.rg.resource_group_location
   resource_group_name = module.rg.resource_group_name
   tags                = module.rg.tags
@@ -1071,7 +1078,7 @@ module "app_service" {
   ip_restrictions = [
     {
       name       = "office-ip"
-      ip_address = "49.37.211.93/32"
+      ip_address = "49.37.209.83/32"
       priority   = 100
       action     = "Allow"
     }
@@ -1097,7 +1104,7 @@ module "app_service" {
   app_insights_name          = "${local.env}${local.workload}-appi"
   log_analytics_workspace_id = module.log_analytics.workspace_id
 
-  action_group_id = module.action_group.id
+  # action_group_id = module.action_group.id
 
   # 8. BACKUP (TOGGLE ZONE)
   backup_config = {

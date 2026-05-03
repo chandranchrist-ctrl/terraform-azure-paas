@@ -94,12 +94,18 @@ resource "azurerm_linux_web_app" "app" {
   }
 }
 
+resource "time_sleep" "wait_for_app" {
+  depends_on = [azurerm_linux_web_app.app]
+  create_duration = "60s"
+}
+
 # ---------------- VNET INTEGRATION ----------------
 resource "azurerm_app_service_virtual_network_swift_connection" "vnet" {
   app_service_id = azurerm_linux_web_app.app.id
   subnet_id      = var.subnet_id
 
   depends_on = [
+    time_sleep.wait_for_app,
     azurerm_linux_web_app.app
   ]
 }

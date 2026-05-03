@@ -5,9 +5,28 @@ resource "azurerm_role_assignment" "acr_owner_group_role" {
   principal_id         = var.owner_group_id
 }
 
-resource "azurerm_role_assignment" "acr_devops_group_role" {
+
+resource "azurerm_role_assignment" "acr_admin_push" {
+  scope              = azurerm_container_registry.acr.id
+  role_definition_id = azurerm_role_definition.acr_admin_custom.role_definition_resource_id
+  principal_id       = var.admin_group_id
+}
+
+resource "azurerm_role_assignment" "acr_admin_pull" {
+  scope              = azurerm_container_registry.acr.id
+  role_definition_id = azurerm_role_definition.acr_admin_custom.role_definition_resource_id
+  principal_id       = var.admin_group_id
+}
+
+resource "azurerm_role_assignment" "acr_devops_push" {
   scope                = azurerm_container_registry.acr.id
   role_definition_name = "AcrPush"
+  principal_id         = var.devops_group_id
+}
+
+resource "azurerm_role_assignment" "acr_devops_pull" {
+  scope                = azurerm_container_registry.acr.id
+  role_definition_name = "AcrPull"
   principal_id         = var.devops_group_id
 }
 

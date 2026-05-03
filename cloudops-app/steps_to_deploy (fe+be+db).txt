@@ -23,6 +23,10 @@ CREATE TABLE Tasks (
     CreatedAt DATETIME DEFAULT GETDATE()
 );
 
+SELECT * FROM Tasks ORDER BY CreatedAt DESC
+
+DELETE FROM Tasks WHERE Title = 'Test task 1';
+
 VERIFY DB
 ---------
 
@@ -38,10 +42,10 @@ STEP 2 — AKS BACKEND DEPLOYMENT
 2.1 Build & push Docker image
 -----------------------------
 
-docker build -t uatbookshopacr01.azurecr.io/backend:v1 ./backend
-docker push uatbookshopacr01.azurecr.io/backend:v1
+docker build -t uatcloudopsacr01.azurecr.io/backend:v1 ./backend
+docker push uatcloudopsacr01.azurecr.io/backend:v1
 
-VERIFY IMAGE: az acr repository list --name uatbookshopacr01.azurecr.io
+VERIFY IMAGE: az acr repository list --name uatcloudopsacr01.azurecr.io
 
 2.2 Attach ACR to AKS (IMPORTANT)
 ---------------------------------

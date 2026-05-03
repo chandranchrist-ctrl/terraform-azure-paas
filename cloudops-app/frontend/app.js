@@ -6,12 +6,12 @@ app.use(express.json());
 
 const API_URL = process.env.API_URL;
 
-// ✅ Health
+// HEALTH
 app.get("/health", (req, res) => {
     res.json({ frontend: "UP" });
 });
 
-// ✅ Add task (with error handling)
+// CREATE
 app.post("/api/add", async (req, res) => {
     try {
         const r = await fetch(`${API_URL}/api/tasks`, {
@@ -20,72 +20,89 @@ app.post("/api/add", async (req, res) => {
             body: JSON.stringify(req.body)
         });
 
-        if (!r.ok) {
-            const text = await r.text();
-            return res.status(500).json({ error: "Backend error", details: text });
-        }
-
-        res.json(await r.json());
-    } catch (err) {
-        console.error("Frontend Add Error:", err);
-        res.status(500).json({ error: "Unable to reach backend" });
+        const text = await r.text();
+        res.status(r.status).send(text);
+    } catch {
+        res.status(500).json({ error: "Backend unreachable" });
     }
 });
 
-// ✅ List tasks (with error handling)
+// LIST
 app.get("/api/list", async (req, res) => {
     try {
         const r = await fetch(`${API_URL}/api/tasks`);
-
-        if (!r.ok) {
-            const text = await r.text();
-            return res.status(500).json({ error: "Backend error", details: text });
-        }
-
-        res.json(await r.json());
-    } catch (err) {
-        console.error("Frontend List Error:", err);
-        res.status(500).json({ error: "Unable to reach backend" });
+        const text = await r.text();
+        res.status(r.status).send(text);
+    } catch {
+        res.status(500).json({ error: "Backend unreachable" });
     }
 });
 
-// ✅ UI (slightly improved for visibility)
+// DELETE
+app.delete("/api/delete/:id", async (req, res) => {
+    try {
+        const r = await fetch(`${API_URL}/api/tasks/${req.params.id}`, {
+            method: "DELETE"
+        });
+
+        const text = await r.text();
+        res.status(r.status).send(text);
+    } catch {
+        res.status(500).json({ error: "Delete failed" });
+    }
+});
+
+// UI
 app.get("/", (req, res) => {
     res.send(`
-        <h2>CloudOps Dashboard</h2>
-        <input id="t" placeholder="Enter task"/>
-        <button onclick="add()">Add</button>
-        <button onclick="load()">Refresh</button>
-        <pre id="out"></pre>
+    <h2>CloudOps Dashboard</h2>
 
-        <script>
-        async function add(){
-            const v = document.getElementById("t").value;
+    <input id="t" placeholder="Task"/>
+    <button onclick="add()">Add</button>
+    <button onclick="load()">Refresh</button>
 
-            const r = await fetch('/api/add',{
-                method:'POST',
-                headers:{'Content-Type':'application/json'},
-                body:JSON.stringify({title:v})
-            });
+    <ul id="list"></ul>
 
-            const data = await r.json();
-            document.getElementById("out").innerText =
-                JSON.stringify(data,null,2);
+    <script>
+    async function add(){
+        const v = document.getElementById("t").value;
+        if(!v.trim()) return alert("Enter task");
 
-            load();
-        }
+        await fetch('/api/add',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({title:v})
+        });
 
-        async function load(){
-            const r = await fetch('/api/list');
-            const data = await r.json();
+        load();
+    }
 
-            document.getElementById("out").innerText =
-                JSON.stringify(data,null,2);
-        }
-        </script>
+    async function del(id){
+        await fetch('/api/delete/'+id,{ method:'DELETE' });
+        load();
+    }
+
+    async function load(){
+        const r = await fetch('/api/list');
+        const data = await r.json();
+
+        const list = document.getElementById("list");
+        list.innerHTML = "";
+
+        data.forEach(t=>{
+            const li = document.createElement("li");
+            li.innerHTML = 
+                t.Title + " [" + t.Status + "] " +
+                "<button onclick='del("+t.Id+")'>❌</button>";
+            list.appendChild(li);
+        });
+    }
+
+    load();
+    </script>
     `);
 });
 
-// ✅ PORT (App Service compatibility)
+// START
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Frontend running on ${PORT}`));
+app.listen(PORT, () => console.log("Frontend running"));

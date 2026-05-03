@@ -39,7 +39,7 @@ locals {
     use_32_bit_worker                 = false
     node_version                      = "18-lts"
     websockets_enabled                = true
-    app_command_line                  = "node app.js"
+    app_command_line                  = "npm install && node app.js"
     health_check_path                 = "/health"
     health_check_eviction_time_in_min = 10
     ftps_state                        = "FtpsOnly"

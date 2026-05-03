@@ -201,3 +201,7 @@ variable "owner_group_id" {
 variable "devops_group_id" {
   type = string
 }
+
+variable "admin_group_id" {
+  type = string
+}

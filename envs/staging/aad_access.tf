@@ -16,6 +16,11 @@ module "access" {
 
   groups = {
     # ACR
+    acr_owner = {
+      name    = "acr-owner"
+      members = local.admin_members
+    }
+
     acr_admins = {
       name    = "acr-admins"
       members = local.admin_members
@@ -56,6 +61,16 @@ module "access" {
 
     app_devops = {
       name    = "appservice-devops"
+      members = local.devops_members
+    }
+
+    law_admins = {
+      name    = "law-admins"
+      members = local.admin_members
+    }
+
+    law_devops = {
+      name    = "law-devops"
       members = local.devops_members
     }
   }

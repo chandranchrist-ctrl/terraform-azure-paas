@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: uatbookshopacr01.azurecr.io/backend:v1   # 🔥 REPLACE THIS
+        image: uatcloudopsacr01.azurecr.io/backend:v1   # 🔥 REPLACE THIS
         ports:
         - containerPort: 3000
 

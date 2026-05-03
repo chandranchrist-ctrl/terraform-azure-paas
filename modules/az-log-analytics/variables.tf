@@ -79,3 +79,16 @@ variable "add_current_user" {
   type    = bool
   default = true
 }
+
+variable "owner_group_id" {
+  type = string
+}
+
+variable "devops_group_id" {
+  type = string
+}
+
+variable "create_law" {
+  type    = bool
+  default = true
+}
