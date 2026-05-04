@@ -284,9 +284,3 @@ variable "aks_dcr_association" {
   type    = string
   default = null
 }
-
-variable "action_group_id" {
-  description = "Action Group ID for alert notifications"
-  type        = string
-  default     = null
-}

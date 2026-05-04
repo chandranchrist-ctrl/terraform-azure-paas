@@ -513,19 +513,6 @@ module "log_analytics" {
   immediate_data_purge_on_30_days_enabled = false
 }
 
-# Observability - Common Action Group
-# module "action_group" {
-#   source = "../../modules/az-action_group"
-
-#   name                = "${local.env}-common-alerts"
-#   short_name          = "alerts"
-#   resource_group_name = module.rg.resource_group_name
-
-#   emails = [
-#     "chandranchrist@gmail.com"
-#   ]
-# }
-
 # Network Security - Azure Bastion
 # module "bastion" {
 #   source = "../../modules/az-bastion"
@@ -927,8 +914,6 @@ module "aks" {
   aks_dcr_name        = "${local.env}-${local.workload}-aks-dcr"
   aks_dcr_association = "${local.env}-${local.workload}-aks-dcr-assoc"
 
-  # action_group_id = module.action_group.id     
-
   # 9. UPGRADES & MAINTENANCE
   enable_maintenance_window = false
 
@@ -1100,11 +1085,9 @@ module "app_service" {
   http_logs_sas_url = module.appservice_storage_account.container_urls["http-logs"]
 
   # 7. MONITORING (TOGGLE ZONE)
-  enable_app_insights        = false
+  enable_app_insights        = true
   app_insights_name          = "${local.env}${local.workload}-appi"
   log_analytics_workspace_id = module.log_analytics.workspace_id
-
-  # action_group_id = module.action_group.id
 
   # 8. BACKUP (TOGGLE ZONE)
   backup_config = {

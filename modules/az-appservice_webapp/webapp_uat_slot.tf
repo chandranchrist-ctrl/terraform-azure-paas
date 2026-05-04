@@ -9,7 +9,14 @@ resource "azurerm_linux_web_app_slot" "uat" {
     type = var.identity_type
   }
 
-  app_settings = local.app_settings_uat
+  app_settings = merge(
+  local.app_settings_uat,
+  local.app_insights_settings,
+  var.enable_app_insights ? {
+    ApplicationInsightsAgent_EXTENSION_VERSION = "~4"
+    XDT_MicrosoftApplicationInsights_Mode      = "recommended"
+  } : {}
+)
 
   site_config {
     always_on           = local.site_config_uat_final.always_on
@@ -59,4 +66,8 @@ resource "azurerm_linux_web_app_slot" "uat" {
     detailed_error_messages = local.logs_config.detailed_error_messages
     failed_request_tracing  = local.logs_config.failed_request_tracing
   }
+
+      depends_on = [
+    azurerm_application_insights.app
+  ]
 }

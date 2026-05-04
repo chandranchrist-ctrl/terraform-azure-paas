@@ -159,8 +159,3 @@ variable "retention_in_days" {
   type    = number
   default = 30
 }
-
-# variable "action_group_id" {
-#   type    = string
-#   default = null
-# }

@@ -12,7 +12,14 @@ resource "azurerm_linux_web_app" "app" {
     type = var.identity_type
   }
 
-  app_settings = local.app_settings_prod
+  app_settings = merge(
+  local.app_settings_prod,
+  local.app_insights_settings,
+  var.enable_app_insights ? {
+    ApplicationInsightsAgent_EXTENSION_VERSION = "~4"
+    XDT_MicrosoftApplicationInsights_Mode      = "recommended"
+  } : {}
+)
 
   site_config {
     always_on           = local.site_config_prod_final.always_on
@@ -50,6 +57,8 @@ resource "azurerm_linux_web_app" "app" {
       }
     }
   }
+
+  
 
   # ---------------- BACKUP ----------------
   dynamic "backup" {
@@ -92,6 +101,10 @@ resource "azurerm_linux_web_app" "app" {
     detailed_error_messages = local.logs_config.detailed_error_messages
     failed_request_tracing  = local.logs_config.failed_request_tracing
   }
+
+    depends_on = [
+    azurerm_application_insights.app
+  ]
 }
 
 resource "time_sleep" "wait_for_app" {
@@ -108,6 +121,10 @@ resource "azurerm_app_service_virtual_network_swift_connection" "vnet" {
     time_sleep.wait_for_app,
     azurerm_linux_web_app.app
   ]
+
+  lifecycle {
+    prevent_destroy = false
+  }
 }
 
 # ---------------- CERTIFICATE ----------------
@@ -119,7 +136,6 @@ resource "azurerm_app_service_certificate" "cert" {
   key_vault_secret_id = var.key_vault_secret_id
 
   depends_on = [
-    azurerm_role_assignment.kv_access,
     azurerm_role_assignment.kv_appservice_access
   ]
 }

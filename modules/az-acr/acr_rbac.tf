@@ -1,3 +1,11 @@
+data "azurerm_client_config" "current" {}
+
+resource "azurerm_role_assignment" "kv_terraform_access" {
+  scope                = var.key_vault_id_token
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = data.azurerm_client_config.current.object_id
+}
+
 # Role Assignment
 resource "azurerm_role_assignment" "acr_owner_group_role" {
   scope                = azurerm_container_registry.acr.id

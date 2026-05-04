@@ -26,26 +26,12 @@ resource "azurerm_container_registry_token" "token" {
   ]
 }
 
-resource "time_sleep" "wait_for_acr_token" {
-  count = var.enable_token ? 1 : 0
-
-  depends_on = [
-    azurerm_container_registry_token.token
-    ]
-
-  create_duration = "60s"
-}
-
 resource "azurerm_container_registry_token_password" "token_pwd" {
   count = var.enable_token ? 1 : 0
 
   container_registry_token_id = azurerm_container_registry_token.token[0].id
 
   password1 {}
-
-    depends_on = [
-    time_sleep.wait_for_acr_token
-  ]
 }
 
 resource "azurerm_key_vault_secret" "acr_token" {
@@ -55,7 +41,8 @@ resource "azurerm_key_vault_secret" "acr_token" {
   key_vault_id = var.key_vault_id_token
 
     depends_on = [
-    azurerm_container_registry_token_password.token_pwd
+    azurerm_role_assignment.kv_terraform_access,
+    azurerm_container_registry_token_password.token_pwd,
   ]
 
   value = jsonencode({
