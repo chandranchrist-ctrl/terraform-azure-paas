@@ -50,16 +50,16 @@ resource "azurerm_subnet" "subnet" {
   #   }
   # }
 
-dynamic "delegation" {
-  for_each = each.value.delegation != null ? [each.value.delegation] : []
+  dynamic "delegation" {
+    for_each = each.value.delegation != null ? [each.value.delegation] : []
 
-  content {
-    name = each.value.delegation.name
+    content {
+      name = each.value.delegation.name
 
-    service_delegation {
-      name    = each.value.delegation.service_delegation.name
-      actions = each.value.delegation.service_delegation.actions
+      service_delegation {
+        name    = each.value.delegation.service_delegation.name
+        actions = each.value.delegation.service_delegation.actions
+      }
     }
   }
-}  
 }

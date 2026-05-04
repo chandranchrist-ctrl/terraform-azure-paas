@@ -17,8 +17,8 @@ resource "azurerm_key_vault_key" "sql_tde_key" {
   ]
 
   depends_on = [
-  azurerm_role_assignment.kv_tf_admin
-]
+    azurerm_role_assignment.kv_tf_admin
+  ]
 }
 
 resource "azurerm_key_vault_key" "acr_cmk" {
@@ -37,6 +37,6 @@ resource "azurerm_key_vault_key" "acr_cmk" {
   ]
 
   depends_on = [
-  azurerm_role_assignment.kv_tf_admin
-]
+    azurerm_role_assignment.kv_tf_admin
+  ]
 }

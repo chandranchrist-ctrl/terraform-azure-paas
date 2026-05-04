@@ -7,8 +7,8 @@ resource "azurerm_key_vault_secret" "secrets" {
   key_vault_id = azurerm_key_vault.kv.id
 
   depends_on = [
-  azurerm_role_assignment.kv_tf_admin
-]
+    azurerm_role_assignment.kv_tf_admin
+  ]
 }
 
 # Security - SSH Public Key
@@ -18,6 +18,6 @@ resource "azurerm_key_vault_secret" "ssh_public_key" {
   key_vault_id = azurerm_key_vault.kv.id
 
   depends_on = [
-  azurerm_role_assignment.kv_tf_admin
-]
+    azurerm_role_assignment.kv_tf_admin
+  ]
 }

@@ -10,7 +10,7 @@ locals {
 
   app_insights_settings = var.enable_app_insights ? {
     APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.app[0].connection_string
-    APPINSIGHTS_INSTRUMENTATIONKEY       = azurerm_application_insights.app[0].instrumentation_key
+    APPINSIGHTS_INSTRUMENTATIONKEY        = azurerm_application_insights.app[0].instrumentation_key
   } : {}
 
   # PROD (DEFAULT WEB APP)

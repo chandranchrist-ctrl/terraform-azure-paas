@@ -41,12 +41,12 @@ variable "subnet_address_space" {
     cidr = list(string)
     tags = optional(map(string), {})
 
-  #   delegation = optional(object({
-  #     name         = string
-  #     service_name = string
-  #     actions      = list(string)
-  #   }), null)
-  # })))
+    #   delegation = optional(object({
+    #     name         = string
+    #     service_name = string
+    #     actions      = list(string)
+    #   }), null)
+    # })))
     delegation = optional(object({
       name = string
 

@@ -40,7 +40,7 @@ resource "azurerm_key_vault_secret" "acr_token" {
   name         = "${var.acr_name}-token"
   key_vault_id = var.key_vault_id_token
 
-    depends_on = [
+  depends_on = [
     azurerm_role_assignment.kv_terraform_access,
     azurerm_container_registry_token_password.token_pwd,
   ]

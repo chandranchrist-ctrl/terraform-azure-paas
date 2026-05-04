@@ -15,6 +15,6 @@ resource "azurerm_key_vault_certificate" "cert" {
   }
 
   depends_on = [
-  azurerm_role_assignment.kv_tf_admin
-]
+    azurerm_role_assignment.kv_tf_admin
+  ]
 }

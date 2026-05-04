@@ -13,13 +13,13 @@ resource "azurerm_linux_web_app" "app" {
   }
 
   app_settings = merge(
-  local.app_settings_prod,
-  local.app_insights_settings,
-  var.enable_app_insights ? {
-    ApplicationInsightsAgent_EXTENSION_VERSION = "~4"
-    XDT_MicrosoftApplicationInsights_Mode      = "recommended"
-  } : {}
-)
+    local.app_settings_prod,
+    local.app_insights_settings,
+    var.enable_app_insights ? {
+      ApplicationInsightsAgent_EXTENSION_VERSION = "~4"
+      XDT_MicrosoftApplicationInsights_Mode      = "recommended"
+    } : {}
+  )
 
   site_config {
     always_on           = local.site_config_prod_final.always_on
@@ -58,7 +58,7 @@ resource "azurerm_linux_web_app" "app" {
     }
   }
 
-  
+
 
   # ---------------- BACKUP ----------------
   dynamic "backup" {
@@ -102,13 +102,13 @@ resource "azurerm_linux_web_app" "app" {
     failed_request_tracing  = local.logs_config.failed_request_tracing
   }
 
-    depends_on = [
+  depends_on = [
     azurerm_application_insights.app
   ]
 }
 
 resource "time_sleep" "wait_for_app" {
-  depends_on = [azurerm_linux_web_app.app]
+  depends_on      = [azurerm_linux_web_app.app]
   create_duration = "60s"
 }
 
