@@ -29,7 +29,7 @@ output "container_urls" {
 output "sas_urls" {
   value = var.enable_sas ? {
     for c in var.containers :
-    c => "${azurerm_storage_account.storage_account.primary_blob_endpoint}${c}?${data.azurerm_storage_account_sas.sas[0].sas}"
+    c => "https://${azurerm_storage_account.storage_account.name}.blob.core.windows.net/${c}?${replace(data.azurerm_storage_account_sas.sas[0].sas, "?", "")}"
   } : {}
 
   sensitive = true

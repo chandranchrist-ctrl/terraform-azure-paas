@@ -1,0 +1,227 @@
+Deployment Guide
+================
+
+Step 1 — Database Setup (MSSQL)
+==============================
+
+1. Connect to SQL Server
+   Use SSMS / Azure Data Studio / any SQL client
+
+2. Create Database
+   CREATE DATABASE CloudOpsDB;
+
+3. Use Database & Create Table
+   USE uat_cloudops_db1;
+
+   CREATE TABLE Tasks (
+       Id INT IDENTITY(1,1) PRIMARY KEY,
+       Title NVARCHAR(255) NOT NULL,
+       Status NVARCHAR(50) DEFAULT 'Pending',
+       CreatedAt DATETIME DEFAULT GETDATE()
+   );
+
+4. Verify
+   SELECT * FROM Tasks;
+
+   Expected: Empty table
+
+
+Step 2 — Backend Deployment (AKS)
+================================
+
+1. Build & Push Docker Image
+
+   cd D:\Terraform\Projects\terraform-azure-paas\cloudops-app
+
+   az acr login --name uatcloudopsacr01
+
+   docker build -t uatcloudopsacr01.azurecr.io/backend:v1 ./backend
+   docker push uatcloudopsacr01.azurecr.io/backend:v1
+
+2. Verify Image
+   az acr repository list --name uatcloudopsacr01
+
+3. Verify AKS → ACR Access
+   az aks show --name uat-bookshop-aks --resource-group uat-rg --query identity
+
+   az acr show --name uatbookshopacr01 --query id -o tsv
+
+   az role assignment list \
+     --assignee <AKS-OBJECT-ID> \
+     --scope <ACR-ID>
+
+   Expected Role: AcrPull
+
+4. Connect to AKS
+   az login --use-device-code --tenant cea4d938-1e95-4999-a84b-610ca1766be4
+   az aks get-credentials --resource-group uat-rg --name uat-cloudops-aks
+
+5. Deploy Backend
+   If AKS is a Private Cluster:
+   - Copy k8s manifests to Jump Host VM
+   - Connect to the VM and run commands from there
+
+   If AKS is Public:
+   - Navigate to manifests directory:
+     cd D:\Terraform\Projects\terraform-azure-paas\cloudops-app\k8s
+
+   (Ensure k8s folder contains required YAML files:
+    secret.yaml, deployment.yaml, service.yaml)
+
+   Deploy resources:
+     kubectl apply -f secret.yaml
+     kubectl apply -f deployment.yaml
+     kubectl apply -f service.yaml
+
+6. Verify Deployment
+   kubectl get pods
+   kubectl get svc
+   kubectl get all
+   kubectl get secret db-secret
+
+   Expected: Pods in Running state
+
+7. Test Backend
+   curl http://<LOAD_BALANCER_IP>/health
+
+   Expected:
+   { "backend": "UP" }
+
+8. Test Database Connectivity
+   curl http://<LOAD_BALANCER_IP>/health/db
+
+   Expected:
+   { "db": "UP" }
+
+
+Step 3 — Frontend (APP Service)
+===============================
+
+1. Prepare ZIP
+   Zip contents of:
+     frontend/
+       app.js
+       package.json
+
+2. Deploy App (SCM / Portal - Preferred)
+
+   Open:
+   https://cloudops-fe-lnx-webapp.scm.azurewebsites.net/
+
+   Go to:
+   Deployments → Upload
+
+   Upload:
+   frontend.zip
+
+   Wait for deployment to complete
+
+   (Alternative - CLI)
+   az webapp deploy ^
+     --resource-group uat-rg ^
+     --name cloudops-fe-lnx-webapp ^
+     --src-path frontend.zip ^
+     --type zip ^
+     --restart true
+
+3. Configure App Settings
+   API_URL = http://<AKS_PRIVATE_IP>
+
+4. Startup Command
+   npm install && node app.js
+
+   (Important: This ensures dependencies are installed and app starts correctly)
+
+5. Networking
+   Ensure VNet Integration (same VNet or peered with AKS)
+
+6. Verify Frontend
+
+   Health Check:
+   https://<appservice>/health
+
+   Expected:
+   { "frontend": "UP" }
+
+7. Backend Connectivity Test
+   curl $API_URL/health
+   curl $API_URL/health/db
+
+   Expected: Backend response
+
+
+Step 4 — End-To-End Test
+========================
+
+1. Open Application
+   https://<appservice-url>
+
+2. Test Flow
+   - Enter task
+   - Click Add
+
+   Expected:
+   Task appears in UI
+
+3. Verify in Database
+   SELECT * FROM Tasks ORDER BY CreatedAt DESC;
+
+   Expected:
+   Data should be stored
+
+4. Delete Flow
+   - Delete a task from UI
+
+   Expected:
+   - Task is removed from UI
+   - Corresponding record is deleted from database   
+
+
+Step 5 — Logs & Montoring
+=========================
+
+1. Backend Logs
+   kubectl logs -f <pod-name>
+
+   Check for /api/task logs
+
+2. Log Analytics Queries
+
+   Kube Events:
+   KubeEvents
+   | sort by TimeGenerated desc
+   | take 20
+
+   Container Logs:
+   ContainerLog
+   | summarize count() by Name, Image
+
+3. Application Insights
+
+   requests
+   | take 20
+
+4. Load Test
+
+   PowerShell:
+   1..120 | % { Invoke-WebRequest https://cloudops.hbcdev.co.in | Out-Null }
+
+   Verify:
+   requests
+   | where timestamp > ago(10m)
+   | summarize count()
+
+
+Step 6 — Cleanup
+================
+az group delete --name uat-rg --yes
+
+terraform destroy
+
+# To Delete the entire Web App (prod + slots)
+az webapp delete ^
+  --resource-group uat-rg ^
+  --name cloudops-fe-lnx-webapp
+
+# To Delete the Web App slot only.
+az webapp delete --name uat-bookshop-fe-lnx-webapp --resource-group uat-rg

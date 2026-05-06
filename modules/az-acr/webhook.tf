@@ -1,3 +1,4 @@
+/* Creates an ACR webhook to trigger external notifications (e.g., CI/CD, Slack) on image push events */
 resource "azurerm_container_registry_webhook" "webhook" {
   count = var.enable_webhook ? 1 : 0
 

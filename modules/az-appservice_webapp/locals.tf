@@ -1,11 +1,11 @@
+/* Defines reusable local variables for App Service configuration including environment mode (public/private), 
+app settings (common, prod, uat), monitoring integration, site behavior, and logging configuration to ensure consistent and modular setup */
 locals {
 
-  # SCM restriction (VALID placement)
-  scm_ip     = "49.37.211.93/32"
-  scm_action = "Allow"
+  is_private = var.app_access_mode == "private"
 
   app_settings_common = {
-    API_URL = "http://172.21.0.34"
+    API_URL = var.api_url
   }
 
   app_insights_settings = var.enable_app_insights ? {

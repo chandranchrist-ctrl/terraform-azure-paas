@@ -39,10 +39,23 @@ resource "azurerm_linux_web_app_slot" "uat" {
 
     remote_debugging_enabled = local.site_config_uat_final.remote_debugging_enabled
 
-    scm_ip_restriction {
-      ip_address = local.scm_ip
-      action     = local.scm_action
+    # scm_ip_restriction {
+    #   ip_address = local.scm_ip
+    #   action     = local.scm_action
+    # }
+
+    dynamic "scm_ip_restriction" {
+      for_each = var.scm_allowed_ips
+
+      content {
+        name       = "office-scm-${scm_ip_restriction.key}"
+        ip_address = scm_ip_restriction.value
+        priority   = 100 + scm_ip_restriction.key
+        action     = "Allow"
+      }
     }
+    scm_ip_restriction_default_action = "Deny"
+    scm_use_main_ip_restriction       = var.scm_use_main_ip_restriction
   }
 
   logs {

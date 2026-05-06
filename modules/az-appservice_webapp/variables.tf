@@ -159,3 +159,32 @@ variable "retention_in_days" {
   type    = number
   default = 30
 }
+
+variable "app_access_mode" {
+  type = string
+}
+
+variable "private_dns_zone_ids" {
+  type    = list(string)
+  default = []
+}
+
+variable "private_endpoint_subnet_id" {
+  type    = string
+  default = null
+}
+
+variable "scm_allowed_ips" {
+  description = "SCM allowed IPs"
+  type        = list(string)
+  default     = []
+}
+
+variable "scm_use_main_ip_restriction" {
+  type    = bool
+  default = false
+}
+
+variable "api_url" {
+  type = string
+}

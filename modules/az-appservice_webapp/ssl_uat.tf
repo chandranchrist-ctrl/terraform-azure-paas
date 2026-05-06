@@ -1,4 +1,7 @@
 resource "null_resource" "uat_txt_dns" {
+
+  count = local.is_private ? 0 : 1
+
   triggers = {
     txt = azurerm_linux_web_app.app.custom_domain_verification_id
   }
@@ -23,6 +26,9 @@ EOT
 }
 
 resource "null_resource" "uat_cname_dns" {
+
+  count = local.is_private ? 0 : 1
+
   triggers = {
     target = azurerm_linux_web_app_slot.uat.default_hostname
   }
@@ -47,6 +53,9 @@ EOT
 }
 
 resource "azurerm_app_service_custom_hostname_binding" "uat" {
+
+  count = local.is_private ? 0 : 1
+
   hostname            = "${var.uat_hostname}.${var.domain}"
   app_service_name    = azurerm_linux_web_app.app.name
   resource_group_name = var.resource_group_name
@@ -58,7 +67,10 @@ resource "azurerm_app_service_custom_hostname_binding" "uat" {
 }
 
 resource "azurerm_app_service_certificate_binding" "uat" {
-  hostname_binding_id = azurerm_app_service_custom_hostname_binding.uat.id
+
+  count = local.is_private ? 0 : 1
+
+  hostname_binding_id = azurerm_app_service_custom_hostname_binding.uat[0].id
   ssl_state           = "SniEnabled"
-  certificate_id      = azurerm_app_service_certificate.cert.id
+  certificate_id      = azurerm_app_service_certificate.cert[0].id
 }

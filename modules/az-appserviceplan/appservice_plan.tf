@@ -1,3 +1,4 @@
+/* Creates an App Service Plan that defines the compute resources (CPU, memory, scaling, OS, and pricing tier) for hosting App Services */
 resource "azurerm_service_plan" "appserviceplan" {
   name                = var.name
   location            = var.location

@@ -28,25 +28,11 @@ variable "vnet_address_space" {
   type = map(list(string))
 }
 
-# subnet_address_space is a nested map of vnet keys to subnet keys to their CIDR and optional tags
-# variable "subnet_address_space" {
-#   type = map(map(object({
-#     cidr = list(string)
-#     tags = optional(map(string), {})
-#   })))
-# }
-
 variable "subnet_address_space" {
   type = map(map(object({
     cidr = list(string)
     tags = optional(map(string), {})
 
-    #   delegation = optional(object({
-    #     name         = string
-    #     service_name = string
-    #     actions      = list(string)
-    #   }), null)
-    # })))
     delegation = optional(object({
       name = string
 

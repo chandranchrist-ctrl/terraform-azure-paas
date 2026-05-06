@@ -13,6 +13,7 @@ resource "azurerm_container_registry_scope_map" "scope" {
   ]
 }
 
+/* Creates an ACR token (data-plane identity) with defined scope map to enable controlled access (e.g., push/pull) when token-based auth is enabled */
 resource "azurerm_container_registry_token" "token" {
   count = var.enable_token ? 1 : 0
 
@@ -26,6 +27,7 @@ resource "azurerm_container_registry_token" "token" {
   ]
 }
 
+/* Generates password credentials for the ACR token, used for authenticating against the registry */
 resource "azurerm_container_registry_token_password" "token_pwd" {
   count = var.enable_token ? 1 : 0
 
@@ -34,6 +36,7 @@ resource "azurerm_container_registry_token_password" "token_pwd" {
   password1 {}
 }
 
+/* Stores ACR token credentials (username & password) securely in Key Vault as a JSON secret for external consumption */
 resource "azurerm_key_vault_secret" "acr_token" {
   count = var.enable_token ? 1 : 0
 

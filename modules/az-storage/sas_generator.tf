@@ -5,7 +5,10 @@ data "azurerm_storage_account_sas" "sas" {
 
   https_only = true
 
-  start  = timestamp()
+  # start  = timestamp()
+  # expiry = timeadd(timestamp(), "8760h")
+
+  start  = timeadd(timestamp(), "-15m")
   expiry = timeadd(timestamp(), "8760h")
 
   resource_types {
@@ -24,7 +27,7 @@ data "azurerm_storage_account_sas" "sas" {
   permissions {
     read    = true
     write   = true
-    delete  = false
+    delete  = true
     list    = true
     add     = true
     create  = true

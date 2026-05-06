@@ -36,20 +36,8 @@ resource "azurerm_subnet" "subnet" {
     "Microsoft.Sql"
   ]
 
-  # dynamic "delegation" {
-  #   for_each = each.value.delegation != null ? [each.value.delegation] : []
-
-  #   content {
-  #     name = each.value.delegation.name
-
-  #     service_delegation {
-  #       name = each.value.delegation.service_name
-
-  #       actions = each.value.delegation.actions
-  #     }
-  #   }
-  # }
-
+  /* Conditionally creates a subnet delegation block when delegation is provided; 
+dynamically assigns the delegation name and service details (service name and allowed actions) to enable Azure service integration (e.g., App Service) with the subnet. */
   dynamic "delegation" {
     for_each = each.value.delegation != null ? [each.value.delegation] : []
 

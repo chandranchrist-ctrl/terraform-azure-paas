@@ -1,4 +1,4 @@
-# Create Azure AD Groups
+/* Creates Azure AD security groups dynamically based on input map for role-based access control and identity management */
 resource "azuread_group" "groups" {
   for_each = var.groups
 
@@ -6,7 +6,7 @@ resource "azuread_group" "groups" {
   security_enabled = true
 }
 
-# Flatten group-member mapping
+/* Flattens group-to-member mapping into a list format to simplify assignment of multiple users to multiple groups */
 locals {
   group_members = flatten([
     for group_key, group in var.groups : [
@@ -18,7 +18,7 @@ locals {
   ])
 }
 
-# Add Members to Groups
+/* Assigns users/service principals as members to Azure AD groups based on the flattened mapping structure */
 resource "azuread_group_member" "members" {
   for_each = {
     for gm in local.group_members :

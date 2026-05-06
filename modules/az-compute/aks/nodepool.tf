@@ -1,3 +1,4 @@
+/* Creates additional AKS worker node pools dynamically when enabled, supporting fixed or autoscaling nodes for workload-specific compute separation */
 resource "azurerm_kubernetes_cluster_node_pool" "extra" {
 
   for_each = var.enable_worker_nodepool ? var.node_pools : {}

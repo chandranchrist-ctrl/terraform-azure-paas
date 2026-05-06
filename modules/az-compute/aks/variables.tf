@@ -2,7 +2,6 @@ variable "name" {
   type = string
 }
 
-
 variable "env" {
   type = string
 }
@@ -30,19 +29,6 @@ variable "sku_tier" {
 variable "dns_prefix" {
   type = string
 }
-
-# variable "dns_prefix_private_cluster" {
-#   type = string
-# }
-
-# variable "private_cluster_public_fqdn_enabled" {
-#   type = bool
-# }
-
-# variable "private_dns_zone_id" {
-#   type    = string
-#   default = null
-# }
 
 variable "automatic_upgrade_channel" {
   type = string

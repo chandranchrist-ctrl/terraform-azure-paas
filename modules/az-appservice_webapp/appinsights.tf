@@ -1,3 +1,5 @@
+/* Creates Application Insights (when enabled) to collect application telemetry like requests, dependencies, and failures, 
+integrated with Log Analytics for monitoring and diagnostics */
 resource "azurerm_application_insights" "app" {
 
   count = var.enable_app_insights ? 1 : 0

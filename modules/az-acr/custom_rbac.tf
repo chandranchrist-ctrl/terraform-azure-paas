@@ -1,3 +1,4 @@
+/* Defines a custom ACR role with data-plane permissions to push (write) and pull (read) container images, scoped only to this registry for controlled admin access */
 resource "azurerm_role_definition" "acr_admin_custom" {
   name        = "acr-admin-custom"
   scope       = azurerm_container_registry.acr.id

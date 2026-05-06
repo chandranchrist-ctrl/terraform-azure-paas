@@ -1,3 +1,4 @@
+/* Grants the owner group full contributor permissions on the Log Analytics Workspace to manage configurations, data, and settings */
 resource "azurerm_role_assignment" "law_monitoring_contributor" {
   count = var.create_law ? 1 : 0
 
@@ -6,6 +7,7 @@ resource "azurerm_role_assignment" "law_monitoring_contributor" {
   principal_id         = var.owner_group_id
 }
 
+/* Grants the DevOps group read-only monitoring access to view logs, metrics, and insights without modifying resources */
 resource "azurerm_role_assignment" "law_monitoring_reader" {
   count = var.create_law ? 1 : 0
 

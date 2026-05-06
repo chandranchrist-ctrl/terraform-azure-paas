@@ -3,7 +3,9 @@ resource "azurerm_storage_account_network_rules" "storage_network_rules" {
   storage_account_id = azurerm_storage_account.storage_account.id
 
   default_action = "Deny"
-  bypass         = ["AzureServices"]
+  bypass = [
+    "AzureServices"
+  ]
 
   virtual_network_subnet_ids = var.allowed_subnet_ids
   ip_rules                   = var.allowed_ip_rules
@@ -19,8 +21,15 @@ resource "azurerm_storage_account" "storage_account" {
   account_tier             = var.account_tier
   account_replication_type = var.replication_type
 
+
+  identity {
+    type = "SystemAssigned"
+  }
+
   dns_endpoint_type             = var.dns_endpoint_type
   public_network_access_enabled = var.public_network_access
+
+  shared_access_key_enabled = true
 
   allow_nested_items_to_be_public = false
 
