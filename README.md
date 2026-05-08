@@ -100,6 +100,9 @@ terraform-azure-infra
 
 ## 1. Infrastructure Architecture
 
+<img width="1751" height="1284" alt="Architecture" src="https://github.com/user-attachments/assets/213bd608-3cb8-4a04-9dd8-646f988aa462" />
+
+
 ## 🏗️ Core Resource Layout
 
 The infrastructure is organized using a modular Terraform architecture where each Azure service is deployed through dedicated reusable modules. Environment-specific deployments consume these modules through separate environment folders.
