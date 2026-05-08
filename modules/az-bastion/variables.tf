@@ -54,3 +54,8 @@ variable "kerberos_enabled" {
 variable "subnet_id" { /* must be AzureBastionSubnet */
   type = string
 }
+
+variable "enable_bastion" {
+  type    = bool
+  default = true
+}
