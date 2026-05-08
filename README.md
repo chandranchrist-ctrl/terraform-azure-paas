@@ -71,11 +71,16 @@ Despite these constraints, the platform maintains enterprise-oriented design pri
 
 terraform-azure-infra
 
-- envs                -> Root Module
+- cloudops-app                        -> test application code
+  - backend (app.js + package.json)
+  - frontend (app.js + package.json)
+  - k8s (yaml files)
+
+- envs                                -> Root Module
   - staging
     - main.tf   (Root deployment entry point)
 
-- modules                -> submodule
+- modules                              -> submodule
   - rg
   - virtual_network
   - vnet_peering

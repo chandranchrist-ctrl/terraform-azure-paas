@@ -296,19 +296,19 @@ module "key_vault" {
   /* key-value secrets stored in Key Vault */
   secrets = {
     localadmin-credentials = jsonencode({
-      admin-username = "HBAdmin",
-      admin-password = "Qwerty123!",
+      admin-username = "Username",
+      admin-password = "Password",
     })
 
     mssql-credentials = jsonencode({
-      username = "sqladmin"
-      password = "SQLP@ssword!23!"
+      username = "Username"
+      password = "Password"
     })
 
     /* Stores GoDaddy API credentials (API Key and Secret) as a JSON-encoded string, typically used for programmatic DNS management or domain automation */
     godaddy-apikey = jsonencode({
-      Key    = "hkHptCfQoPVe_S64u3fVz88NYAZwGPuE9ir"
-      Secret = "QLsAdAfb4pLq4VsVMQ2gFT"
+      Key    = "<go-daddy api_key>"
+      Secret = "<go-daddy api_secret>"
     })
   }
 
@@ -1120,7 +1120,7 @@ module "app_service" {
   ip_restrictions = [
     {
       name       = "office-ip"
-      ip_address = "49.37.209.83/32"
+      ip_address = "49.38.219.93/32"
       priority   = 100
       action     = "Allow"
     }
@@ -1134,7 +1134,7 @@ module "app_service" {
   api_url = "http://172.21.0.34"
 
   # 5. DOMAIN / DNS / CERT
-  domain        = "hbcdev.co.in"
+  domain        = "company.co.in"
   prod_hostname = "cloudops"
   uat_hostname  = "uat-cloudops"
 
@@ -1199,8 +1199,8 @@ module "app_service" {
 #   apps = {
 #     cloudops = {
 #       enabled        = true                                                       # enable this backend (prod app)
-#       host_name      = "cloudops.hbcdev.co.in"                                    # Front Door custom domain (FULL FQDN)
-#       domain         = "hbcdev.co.in"                                             # DNS zone
+#       host_name      = "cloudops.company.co.in"                                    # Front Door custom domain (FULL FQDN)
+#       domain         = "company.co.in"                                             # DNS zone
 #       cert_secret_id = module.key_vault.certificate_secret_ids["wildcard-cert"]   # TLS cert secret
 #        backend_primary = "cloudops-fe-lnx-webapp.azurewebsites.net"
 
@@ -1210,8 +1210,8 @@ module "app_service" {
 
 #     uat_cloudops = {
 #       enabled        = false
-#       host_name      = "uat-cloudops.hbcdev.co.in"
-#       domain         = "hbcdev.co.in"
+#       host_name      = "uat-cloudops.company.co.in"
+#       domain         = "company.co.in"
 #       cert_secret_id = module.key_vault.certificate_secret_ids["wildcard-cert"]
 #       backend_primary    = "cloudops-fe-lnx-webapp-uat.azurewebsites.net"
 
