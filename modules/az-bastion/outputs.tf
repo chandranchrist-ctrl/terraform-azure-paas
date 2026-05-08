@@ -3,9 +3,9 @@ output "bastion_id" {
 }
 
 output "bastion_fqdn" {
-  value = azurerm_bastion_host.bastion.dns_name
+  value = var.enable_bastion ? azurerm_bastion_host.bastion[0].dns_name : null
 }
 
-output "public_ip" {
+output "public_ip_id" {
   value = var.enable_bastion ? azurerm_public_ip.bastion_pip[0].ip_address : null
 }

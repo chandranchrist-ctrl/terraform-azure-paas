@@ -542,7 +542,7 @@ module "log_analytics" {
 module "bastion" {
   source = "../../modules/az-bastion"
 
-  enable_bastion = false
+  enable_bastion = true
 
   env = local.env
 
@@ -593,7 +593,7 @@ module "jumpbox_linux_vm" {
   os_disk_storage_type = "Standard_LRS"
   os_disk_size_gb      = 127
 
-  enable_public_ip = true /* true  → VM gets public IP (direct internet access) */
+  enable_public_ip = false /* true  → VM gets public IP (direct internet access) */
 
   enable_availability_set = false /* true  → VMs distributed across fault/update domains (HA within region) */
 

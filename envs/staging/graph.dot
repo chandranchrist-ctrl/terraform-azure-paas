@@ -1,0 +1,588 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "data.azuread_client_config.current" [label="data.azuread_client_config.current"];
+  subgraph "cluster_module.access" {
+    label = "module.access"
+    fontname = "sans-serif"
+    "module.access.azuread_group.groups" [label="azuread_group.groups"];
+    "module.access.azuread_group_member.members" [label="azuread_group_member.members"];
+  }
+  subgraph "cluster_module.acr" {
+    label = "module.acr"
+    fontname = "sans-serif"
+    "module.acr.data.azurerm_client_config.current" [label="data.azurerm_client_config.current"];
+    "module.acr.azurerm_container_registry.acr" [label="azurerm_container_registry.acr"];
+    "module.acr.azurerm_container_registry_scope_map.scope" [label="azurerm_container_registry_scope_map.scope"];
+    "module.acr.azurerm_container_registry_token.token" [label="azurerm_container_registry_token.token"];
+    "module.acr.azurerm_container_registry_token_password.token_pwd" [label="azurerm_container_registry_token_password.token_pwd"];
+    "module.acr.azurerm_container_registry_webhook.webhook" [label="azurerm_container_registry_webhook.webhook"];
+    "module.acr.azurerm_key_vault_secret.acr_token" [label="azurerm_key_vault_secret.acr_token"];
+    "module.acr.azurerm_private_endpoint.acr" [label="azurerm_private_endpoint.acr"];
+    "module.acr.azurerm_role_assignment.acr_admin" [label="azurerm_role_assignment.acr_admin"];
+    "module.acr.azurerm_role_assignment.acr_devops_pull" [label="azurerm_role_assignment.acr_devops_pull"];
+    "module.acr.azurerm_role_assignment.acr_devops_push" [label="azurerm_role_assignment.acr_devops_push"];
+    "module.acr.azurerm_role_assignment.acr_kv_crypto" [label="azurerm_role_assignment.acr_kv_crypto"];
+    "module.acr.azurerm_role_assignment.acr_owner_group_role" [label="azurerm_role_assignment.acr_owner_group_role"];
+    "module.acr.azurerm_role_assignment.kv_terraform_access" [label="azurerm_role_assignment.kv_terraform_access"];
+    "module.acr.azurerm_role_definition.acr_admin_custom" [label="azurerm_role_definition.acr_admin_custom"];
+  }
+  subgraph "cluster_module.aks" {
+    label = "module.aks"
+    fontname = "sans-serif"
+    "module.aks.data.azurerm_client_config.current" [label="data.azurerm_client_config.current"];
+    "module.aks.azurerm_kubernetes_cluster.aks" [label="azurerm_kubernetes_cluster.aks"];
+    "module.aks.azurerm_kubernetes_cluster_deployment_safeguard.safe" [label="azurerm_kubernetes_cluster_deployment_safeguard.safe"];
+    "module.aks.azurerm_kubernetes_cluster_extension.ext" [label="azurerm_kubernetes_cluster_extension.ext"];
+    "module.aks.azurerm_kubernetes_cluster_node_pool.extra" [label="azurerm_kubernetes_cluster_node_pool.extra"];
+    "module.aks.azurerm_kubernetes_cluster_trusted_access_role_binding.trusted" [label="azurerm_kubernetes_cluster_trusted_access_role_binding.trusted"];
+    "module.aks.azurerm_monitor_data_collection_rule.aks" [label="azurerm_monitor_data_collection_rule.aks"];
+    "module.aks.azurerm_monitor_data_collection_rule_association.aks" [label="azurerm_monitor_data_collection_rule_association.aks"];
+    "module.aks.azurerm_role_assignment.aks_acr_pull" [label="azurerm_role_assignment.aks_acr_pull"];
+    "module.aks.azurerm_role_assignment.aks_admin" [label="azurerm_role_assignment.aks_admin"];
+    "module.aks.azurerm_role_assignment.aks_devops" [label="azurerm_role_assignment.aks_devops"];
+    "module.aks.azurerm_role_assignment.aks_network_control_plane" [label="azurerm_role_assignment.aks_network_control_plane"];
+    "module.aks.azurerm_role_assignment.aks_network_kubelet" [label="azurerm_role_assignment.aks_network_kubelet"];
+    "module.aks.azurerm_role_assignment.kv_secrets" [label="azurerm_role_assignment.kv_secrets"];
+  }
+  subgraph "cluster_module.app_service" {
+    label = "module.app_service"
+    fontname = "sans-serif"
+    "module.app_service.data.azuread_service_principal.appservice" [label="data.azuread_service_principal.appservice"];
+    "module.app_service.data.azurerm_key_vault_secret.godaddy" [label="data.azurerm_key_vault_secret.godaddy"];
+    "module.app_service.azurerm_app_service_certificate.cert" [label="azurerm_app_service_certificate.cert"];
+    "module.app_service.azurerm_app_service_certificate_binding.prod" [label="azurerm_app_service_certificate_binding.prod"];
+    "module.app_service.azurerm_app_service_certificate_binding.uat" [label="azurerm_app_service_certificate_binding.uat"];
+    "module.app_service.azurerm_app_service_custom_hostname_binding.prod" [label="azurerm_app_service_custom_hostname_binding.prod"];
+    "module.app_service.azurerm_app_service_custom_hostname_binding.uat" [label="azurerm_app_service_custom_hostname_binding.uat"];
+    "module.app_service.azurerm_app_service_virtual_network_swift_connection.vnet" [label="azurerm_app_service_virtual_network_swift_connection.vnet"];
+    "module.app_service.azurerm_application_insights.app" [label="azurerm_application_insights.app"];
+    "module.app_service.azurerm_linux_web_app.app" [label="azurerm_linux_web_app.app"];
+    "module.app_service.azurerm_linux_web_app_slot.uat" [label="azurerm_linux_web_app_slot.uat"];
+    "module.app_service.azurerm_private_endpoint.app" [label="azurerm_private_endpoint.app"];
+    "module.app_service.azurerm_role_assignment.app_admin" [label="azurerm_role_assignment.app_admin"];
+    "module.app_service.azurerm_role_assignment.app_devops" [label="azurerm_role_assignment.app_devops"];
+    "module.app_service.azurerm_role_assignment.kv_access" [label="azurerm_role_assignment.kv_access"];
+    "module.app_service.azurerm_role_assignment.kv_appservice_access" [label="azurerm_role_assignment.kv_appservice_access"];
+    "module.app_service.azurerm_role_assignment.kv_cert_access" [label="azurerm_role_assignment.kv_cert_access"];
+    "module.app_service.azurerm_role_assignment.storage_access" [label="azurerm_role_assignment.storage_access"];
+    "module.app_service.null_resource.prod_cname_dns" [label="null_resource.prod_cname_dns"];
+    "module.app_service.null_resource.prod_txt_dns" [label="null_resource.prod_txt_dns"];
+    "module.app_service.null_resource.uat_cname_dns" [label="null_resource.uat_cname_dns"];
+    "module.app_service.null_resource.uat_txt_dns" [label="null_resource.uat_txt_dns"];
+    "module.app_service.time_sleep.wait_for_app" [label="time_sleep.wait_for_app"];
+    "module.app_service.time_sleep.wait_for_dns" [label="time_sleep.wait_for_dns"];
+  }
+  subgraph "cluster_module.appservice_plan_linux" {
+    label = "module.appservice_plan_linux"
+    fontname = "sans-serif"
+    "module.appservice_plan_linux.azurerm_service_plan.appserviceplan" [label="azurerm_service_plan.appserviceplan"];
+  }
+  subgraph "cluster_module.appservice_storage_account" {
+    label = "module.appservice_storage_account"
+    fontname = "sans-serif"
+    "module.appservice_storage_account.data.azurerm_storage_account_sas.sas" [label="data.azurerm_storage_account_sas.sas"];
+    "module.appservice_storage_account.azurerm_storage_account.storage_account" [label="azurerm_storage_account.storage_account"];
+    "module.appservice_storage_account.azurerm_storage_account_network_rules.storage_network_rules" [label="azurerm_storage_account_network_rules.storage_network_rules"];
+    "module.appservice_storage_account.azurerm_storage_container.containers" [label="azurerm_storage_container.containers"];
+    "module.appservice_storage_account.azurerm_storage_management_policy.this" [label="azurerm_storage_management_policy.this"];
+  }
+  subgraph "cluster_module.bastion" {
+    label = "module.bastion"
+    fontname = "sans-serif"
+    "module.bastion.azurerm_bastion_host.bastion" [label="azurerm_bastion_host.bastion"];
+    "module.bastion.azurerm_public_ip.bastion_pip" [label="azurerm_public_ip.bastion_pip"];
+  }
+  subgraph "cluster_module.diag_storage_account" {
+    label = "module.diag_storage_account"
+    fontname = "sans-serif"
+    "module.diag_storage_account.data.azurerm_storage_account_sas.sas" [label="data.azurerm_storage_account_sas.sas"];
+    "module.diag_storage_account.azurerm_storage_account.storage_account" [label="azurerm_storage_account.storage_account"];
+    "module.diag_storage_account.azurerm_storage_account_network_rules.storage_network_rules" [label="azurerm_storage_account_network_rules.storage_network_rules"];
+    "module.diag_storage_account.azurerm_storage_container.containers" [label="azurerm_storage_container.containers"];
+    "module.diag_storage_account.azurerm_storage_management_policy.this" [label="azurerm_storage_management_policy.this"];
+  }
+  subgraph "cluster_module.jumpbox_linux_vm" {
+    label = "module.jumpbox_linux_vm"
+    fontname = "sans-serif"
+    "module.jumpbox_linux_vm.data.azurerm_backup_policy_vm.policy" [label="data.azurerm_backup_policy_vm.policy"];
+    "module.jumpbox_linux_vm.data.azurerm_client_config.current" [label="data.azurerm_client_config.current"];
+    "module.jumpbox_linux_vm.data.azurerm_key_vault_secret.localadmin_credentials" [label="data.azurerm_key_vault_secret.localadmin_credentials"];
+    "module.jumpbox_linux_vm.data.azurerm_key_vault_secret.ssh_public_key" [label="data.azurerm_key_vault_secret.ssh_public_key"];
+    "module.jumpbox_linux_vm.data.azurerm_lb.existing" [label="data.azurerm_lb.existing"];
+    "module.jumpbox_linux_vm.data.azurerm_lb_backend_address_pool.existing" [label="data.azurerm_lb_backend_address_pool.existing"];
+    "module.jumpbox_linux_vm.data.azurerm_recovery_services_vault.vault" [label="data.azurerm_recovery_services_vault.vault"];
+    "module.jumpbox_linux_vm.data.azurerm_storage_account.diag" [label="data.azurerm_storage_account.diag"];
+    "module.jumpbox_linux_vm.azurerm_application_security_group.asg" [label="azurerm_application_security_group.asg"];
+    "module.jumpbox_linux_vm.azurerm_availability_set.avset" [label="azurerm_availability_set.avset"];
+    "module.jumpbox_linux_vm.azurerm_backup_protected_vm.vm_backup" [label="azurerm_backup_protected_vm.vm_backup"];
+    "module.jumpbox_linux_vm.azurerm_linux_virtual_machine.vm" [label="azurerm_linux_virtual_machine.vm"];
+    "module.jumpbox_linux_vm.azurerm_managed_disk.data_disk" [label="azurerm_managed_disk.data_disk"];
+    "module.jumpbox_linux_vm.azurerm_network_interface.nic" [label="azurerm_network_interface.nic"];
+    "module.jumpbox_linux_vm.azurerm_network_interface_application_security_group_association.asg_attach" [label="azurerm_network_interface_application_security_group_association.asg_attach"];
+    "module.jumpbox_linux_vm.azurerm_network_interface_backend_address_pool_association.lb" [label="azurerm_network_interface_backend_address_pool_association.lb"];
+    "module.jumpbox_linux_vm.azurerm_public_ip.pip" [label="azurerm_public_ip.pip"];
+    "module.jumpbox_linux_vm.azurerm_role_assignment.vm_kv_secrets" [label="azurerm_role_assignment.vm_kv_secrets"];
+    "module.jumpbox_linux_vm.azurerm_storage_account.diag" [label="azurerm_storage_account.diag"];
+    "module.jumpbox_linux_vm.azurerm_virtual_machine_data_disk_attachment.attach" [label="azurerm_virtual_machine_data_disk_attachment.attach"];
+    "module.jumpbox_linux_vm.azurerm_virtual_machine_extension.ama" [label="azurerm_virtual_machine_extension.ama"];
+  }
+  subgraph "cluster_module.key_vault" {
+    label = "module.key_vault"
+    fontname = "sans-serif"
+    "module.key_vault.data.azurerm_client_config.current" [label="data.azurerm_client_config.current"];
+    "module.key_vault.data.azurerm_storage_account.kv_audit" [label="data.azurerm_storage_account.kv_audit"];
+    "module.key_vault.azurerm_key_vault.kv" [label="azurerm_key_vault.kv"];
+    "module.key_vault.azurerm_key_vault_access_policy.me" [label="azurerm_key_vault_access_policy.me"];
+    "module.key_vault.azurerm_key_vault_certificate.cert" [label="azurerm_key_vault_certificate.cert"];
+    "module.key_vault.azurerm_key_vault_key.acr_cmk" [label="azurerm_key_vault_key.acr_cmk"];
+    "module.key_vault.azurerm_key_vault_key.sql_tde_key" [label="azurerm_key_vault_key.sql_tde_key"];
+    "module.key_vault.azurerm_key_vault_secret.secrets" [label="azurerm_key_vault_secret.secrets"];
+    "module.key_vault.azurerm_key_vault_secret.ssh_public_key" [label="azurerm_key_vault_secret.ssh_public_key"];
+    "module.key_vault.azurerm_monitor_diagnostic_setting.kv_audit" [label="azurerm_monitor_diagnostic_setting.kv_audit"];
+    "module.key_vault.azurerm_private_endpoint.keyvault" [label="azurerm_private_endpoint.keyvault"];
+    "module.key_vault.azurerm_role_assignment.kv_admin" [label="azurerm_role_assignment.kv_admin"];
+    "module.key_vault.azurerm_role_assignment.kv_devops" [label="azurerm_role_assignment.kv_devops"];
+    "module.key_vault.azurerm_role_assignment.kv_tf_admin" [label="azurerm_role_assignment.kv_tf_admin"];
+  }
+  subgraph "cluster_module.log_analytics" {
+    label = "module.log_analytics"
+    fontname = "sans-serif"
+    "module.log_analytics.azurerm_log_analytics_workspace.law" [label="azurerm_log_analytics_workspace.law"];
+    "module.log_analytics.azurerm_role_assignment.law_monitoring_contributor" [label="azurerm_role_assignment.law_monitoring_contributor"];
+    "module.log_analytics.azurerm_role_assignment.law_monitoring_reader" [label="azurerm_role_assignment.law_monitoring_reader"];
+  }
+  subgraph "cluster_module.mssql" {
+    label = "module.mssql"
+    fontname = "sans-serif"
+    "module.mssql.data.azurerm_client_config.current" [label="data.azurerm_client_config.current"];
+    "module.mssql.data.azurerm_key_vault_secret.sql_credentials" [label="data.azurerm_key_vault_secret.sql_credentials"];
+    "module.mssql.azurerm_mssql_database.db" [label="azurerm_mssql_database.db"];
+    "module.mssql.azurerm_mssql_database_extended_auditing_policy.db_audit" [label="azurerm_mssql_database_extended_auditing_policy.db_audit"];
+    "module.mssql.azurerm_mssql_firewall_rule.allow_ips" [label="azurerm_mssql_firewall_rule.allow_ips"];
+    "module.mssql.azurerm_mssql_outbound_firewall_rule.outbound" [label="azurerm_mssql_outbound_firewall_rule.outbound"];
+    "module.mssql.azurerm_mssql_server.mssql" [label="azurerm_mssql_server.mssql"];
+    "module.mssql.azurerm_mssql_server_extended_auditing_policy.server_audit" [label="azurerm_mssql_server_extended_auditing_policy.server_audit"];
+    "module.mssql.azurerm_mssql_server_security_alert_policy.alerts" [label="azurerm_mssql_server_security_alert_policy.alerts"];
+    "module.mssql.azurerm_mssql_server_transparent_data_encryption.tde" [label="azurerm_mssql_server_transparent_data_encryption.tde"];
+    "module.mssql.azurerm_mssql_server_vulnerability_assessment.va" [label="azurerm_mssql_server_vulnerability_assessment.va"];
+    "module.mssql.azurerm_mssql_virtual_network_rule.service_endpoint_app" [label="azurerm_mssql_virtual_network_rule.service_endpoint_app"];
+    "module.mssql.azurerm_private_endpoint.mssql" [label="azurerm_private_endpoint.mssql"];
+    "module.mssql.azurerm_role_assignment.sql_kv_cert" [label="azurerm_role_assignment.sql_kv_cert"];
+    "module.mssql.azurerm_role_assignment.sql_kv_keys" [label="azurerm_role_assignment.sql_kv_keys"];
+    "module.mssql.azurerm_role_assignment.sql_kv_secrets" [label="azurerm_role_assignment.sql_kv_secrets"];
+    "module.mssql.azurerm_role_assignment.sql_storage_blob_contributor" [label="azurerm_role_assignment.sql_storage_blob_contributor"];
+  }
+  subgraph "cluster_module.mssql_storage_account" {
+    label = "module.mssql_storage_account"
+    fontname = "sans-serif"
+    "module.mssql_storage_account.data.azurerm_storage_account_sas.sas" [label="data.azurerm_storage_account_sas.sas"];
+    "module.mssql_storage_account.azurerm_storage_account.storage_account" [label="azurerm_storage_account.storage_account"];
+    "module.mssql_storage_account.azurerm_storage_account_network_rules.storage_network_rules" [label="azurerm_storage_account_network_rules.storage_network_rules"];
+    "module.mssql_storage_account.azurerm_storage_container.containers" [label="azurerm_storage_container.containers"];
+    "module.mssql_storage_account.azurerm_storage_management_policy.this" [label="azurerm_storage_management_policy.this"];
+  }
+  subgraph "cluster_module.private_dns" {
+    label = "module.private_dns"
+    fontname = "sans-serif"
+    "module.private_dns.azurerm_private_dns_zone.zones" [label="azurerm_private_dns_zone.zones"];
+    "module.private_dns.azurerm_private_dns_zone_virtual_network_link.links" [label="azurerm_private_dns_zone_virtual_network_link.links"];
+  }
+  subgraph "cluster_module.rg" {
+    label = "module.rg"
+    fontname = "sans-serif"
+    "module.rg.azurerm_resource_group.rg" [label="azurerm_resource_group.rg"];
+  }
+  subgraph "cluster_module.virtual_network" {
+    label = "module.virtual_network"
+    fontname = "sans-serif"
+    "module.virtual_network.azurerm_network_security_group.nsg" [label="azurerm_network_security_group.nsg"];
+    "module.virtual_network.azurerm_network_security_rule.nsg_rule" [label="azurerm_network_security_rule.nsg_rule"];
+    "module.virtual_network.azurerm_subnet.subnet" [label="azurerm_subnet.subnet"];
+    "module.virtual_network.azurerm_subnet_network_security_group_association.nsg_assoc" [label="azurerm_subnet_network_security_group_association.nsg_assoc"];
+    "module.virtual_network.azurerm_virtual_network.vnet" [label="azurerm_virtual_network.vnet"];
+  }
+  subgraph "cluster_module.vnet_peering" {
+    label = "module.vnet_peering"
+    fontname = "sans-serif"
+    "module.vnet_peering.azurerm_virtual_network_peering.vnet_peering" [label="azurerm_virtual_network_peering.vnet_peering"];
+  }
+  "module.access.azuread_group.groups" -> "data.azuread_client_config.current";
+  "module.access.azuread_group_member.members" -> "module.access.azuread_group.groups";
+  "module.acr.data.azurerm_client_config.current" -> "module.access.azuread_group_member.members";
+  "module.acr.data.azurerm_client_config.current" -> "module.private_dns.azurerm_private_dns_zone_virtual_network_link.links";
+  "module.acr.azurerm_container_registry.acr" -> "module.access.azuread_group_member.members";
+  "module.acr.azurerm_container_registry.acr" -> "module.private_dns.azurerm_private_dns_zone_virtual_network_link.links";
+  "module.acr.azurerm_container_registry_scope_map.scope" -> "module.acr.azurerm_container_registry.acr";
+  "module.acr.azurerm_container_registry_token.token" -> "module.acr.azurerm_container_registry_scope_map.scope";
+  "module.acr.azurerm_container_registry_token_password.token_pwd" -> "module.acr.azurerm_container_registry_token.token";
+  "module.acr.azurerm_container_registry_webhook.webhook" -> "module.acr.azurerm_container_registry.acr";
+  "module.acr.azurerm_key_vault_secret.acr_token" -> "module.acr.azurerm_container_registry_token_password.token_pwd";
+  "module.acr.azurerm_key_vault_secret.acr_token" -> "module.acr.azurerm_role_assignment.kv_terraform_access";
+  "module.acr.azurerm_private_endpoint.acr" -> "module.acr.azurerm_container_registry.acr";
+  "module.acr.azurerm_role_assignment.acr_admin" -> "module.acr.azurerm_role_definition.acr_admin_custom";
+  "module.acr.azurerm_role_assignment.acr_devops_pull" -> "module.acr.azurerm_container_registry.acr";
+  "module.acr.azurerm_role_assignment.acr_devops_push" -> "module.acr.azurerm_container_registry.acr";
+  "module.acr.azurerm_role_assignment.acr_kv_crypto" -> "module.acr.azurerm_container_registry.acr";
+  "module.acr.azurerm_role_assignment.acr_kv_crypto" -> "module.key_vault.azurerm_key_vault.kv";
+  "module.acr.azurerm_role_assignment.acr_owner_group_role" -> "module.acr.azurerm_container_registry.acr";
+  "module.acr.azurerm_role_assignment.kv_terraform_access" -> "module.acr.data.azurerm_client_config.current";
+  "module.acr.azurerm_role_assignment.kv_terraform_access" -> "module.key_vault.azurerm_key_vault.kv";
+  "module.acr.azurerm_role_definition.acr_admin_custom" -> "module.acr.azurerm_container_registry.acr";
+  "module.aks.data.azurerm_client_config.current" -> "module.acr.azurerm_container_registry_webhook.webhook";
+  "module.aks.data.azurerm_client_config.current" -> "module.acr.azurerm_key_vault_secret.acr_token";
+  "module.aks.data.azurerm_client_config.current" -> "module.acr.azurerm_private_endpoint.acr";
+  "module.aks.data.azurerm_client_config.current" -> "module.acr.azurerm_role_assignment.acr_admin";
+  "module.aks.data.azurerm_client_config.current" -> "module.acr.azurerm_role_assignment.acr_devops_pull";
+  "module.aks.data.azurerm_client_config.current" -> "module.acr.azurerm_role_assignment.acr_devops_push";
+  "module.aks.data.azurerm_client_config.current" -> "module.acr.azurerm_role_assignment.acr_kv_crypto";
+  "module.aks.data.azurerm_client_config.current" -> "module.acr.azurerm_role_assignment.acr_owner_group_role";
+  "module.aks.data.azurerm_client_config.current" -> "module.key_vault.azurerm_key_vault_access_policy.me";
+  "module.aks.data.azurerm_client_config.current" -> "module.key_vault.azurerm_key_vault_certificate.cert";
+  "module.aks.data.azurerm_client_config.current" -> "module.key_vault.azurerm_key_vault_key.acr_cmk";
+  "module.aks.data.azurerm_client_config.current" -> "module.key_vault.azurerm_key_vault_key.sql_tde_key";
+  "module.aks.data.azurerm_client_config.current" -> "module.key_vault.azurerm_key_vault_secret.secrets";
+  "module.aks.data.azurerm_client_config.current" -> "module.key_vault.azurerm_key_vault_secret.ssh_public_key";
+  "module.aks.data.azurerm_client_config.current" -> "module.key_vault.azurerm_monitor_diagnostic_setting.kv_audit";
+  "module.aks.data.azurerm_client_config.current" -> "module.key_vault.azurerm_private_endpoint.keyvault";
+  "module.aks.data.azurerm_client_config.current" -> "module.key_vault.azurerm_role_assignment.kv_admin";
+  "module.aks.data.azurerm_client_config.current" -> "module.key_vault.azurerm_role_assignment.kv_devops";
+  "module.aks.data.azurerm_client_config.current" -> "module.log_analytics.azurerm_role_assignment.law_monitoring_contributor";
+  "module.aks.data.azurerm_client_config.current" -> "module.log_analytics.azurerm_role_assignment.law_monitoring_reader";
+  "module.aks.azurerm_kubernetes_cluster.aks" -> "module.aks.data.azurerm_client_config.current";
+  "module.aks.azurerm_kubernetes_cluster_deployment_safeguard.safe" -> "module.aks.azurerm_kubernetes_cluster.aks";
+  "module.aks.azurerm_kubernetes_cluster_extension.ext" -> "module.aks.azurerm_kubernetes_cluster.aks";
+  "module.aks.azurerm_kubernetes_cluster_node_pool.extra" -> "module.aks.azurerm_kubernetes_cluster.aks";
+  "module.aks.azurerm_kubernetes_cluster_trusted_access_role_binding.trusted" -> "module.aks.azurerm_kubernetes_cluster.aks";
+  "module.aks.azurerm_monitor_data_collection_rule.aks" -> "module.acr.azurerm_container_registry_webhook.webhook";
+  "module.aks.azurerm_monitor_data_collection_rule.aks" -> "module.acr.azurerm_key_vault_secret.acr_token";
+  "module.aks.azurerm_monitor_data_collection_rule.aks" -> "module.acr.azurerm_private_endpoint.acr";
+  "module.aks.azurerm_monitor_data_collection_rule.aks" -> "module.acr.azurerm_role_assignment.acr_admin";
+  "module.aks.azurerm_monitor_data_collection_rule.aks" -> "module.acr.azurerm_role_assignment.acr_devops_pull";
+  "module.aks.azurerm_monitor_data_collection_rule.aks" -> "module.acr.azurerm_role_assignment.acr_devops_push";
+  "module.aks.azurerm_monitor_data_collection_rule.aks" -> "module.acr.azurerm_role_assignment.acr_kv_crypto";
+  "module.aks.azurerm_monitor_data_collection_rule.aks" -> "module.acr.azurerm_role_assignment.acr_owner_group_role";
+  "module.aks.azurerm_monitor_data_collection_rule.aks" -> "module.key_vault.azurerm_key_vault_access_policy.me";
+  "module.aks.azurerm_monitor_data_collection_rule.aks" -> "module.key_vault.azurerm_key_vault_certificate.cert";
+  "module.aks.azurerm_monitor_data_collection_rule.aks" -> "module.key_vault.azurerm_key_vault_key.acr_cmk";
+  "module.aks.azurerm_monitor_data_collection_rule.aks" -> "module.key_vault.azurerm_key_vault_key.sql_tde_key";
+  "module.aks.azurerm_monitor_data_collection_rule.aks" -> "module.key_vault.azurerm_key_vault_secret.secrets";
+  "module.aks.azurerm_monitor_data_collection_rule.aks" -> "module.key_vault.azurerm_key_vault_secret.ssh_public_key";
+  "module.aks.azurerm_monitor_data_collection_rule.aks" -> "module.key_vault.azurerm_monitor_diagnostic_setting.kv_audit";
+  "module.aks.azurerm_monitor_data_collection_rule.aks" -> "module.key_vault.azurerm_private_endpoint.keyvault";
+  "module.aks.azurerm_monitor_data_collection_rule.aks" -> "module.key_vault.azurerm_role_assignment.kv_admin";
+  "module.aks.azurerm_monitor_data_collection_rule.aks" -> "module.key_vault.azurerm_role_assignment.kv_devops";
+  "module.aks.azurerm_monitor_data_collection_rule.aks" -> "module.log_analytics.azurerm_role_assignment.law_monitoring_contributor";
+  "module.aks.azurerm_monitor_data_collection_rule.aks" -> "module.log_analytics.azurerm_role_assignment.law_monitoring_reader";
+  "module.aks.azurerm_monitor_data_collection_rule_association.aks" -> "module.aks.azurerm_kubernetes_cluster.aks";
+  "module.aks.azurerm_monitor_data_collection_rule_association.aks" -> "module.aks.azurerm_monitor_data_collection_rule.aks";
+  "module.aks.azurerm_role_assignment.aks_acr_pull" -> "module.aks.azurerm_kubernetes_cluster.aks";
+  "module.aks.azurerm_role_assignment.aks_admin" -> "module.aks.azurerm_kubernetes_cluster.aks";
+  "module.aks.azurerm_role_assignment.aks_devops" -> "module.aks.azurerm_kubernetes_cluster.aks";
+  "module.aks.azurerm_role_assignment.aks_network_control_plane" -> "module.aks.azurerm_kubernetes_cluster.aks";
+  "module.aks.azurerm_role_assignment.aks_network_kubelet" -> "module.aks.azurerm_kubernetes_cluster.aks";
+  "module.aks.azurerm_role_assignment.kv_secrets" -> "module.aks.azurerm_kubernetes_cluster.aks";
+  "module.app_service.data.azuread_service_principal.appservice" -> "module.appservice_plan_linux.azurerm_service_plan.appserviceplan";
+  "module.app_service.data.azuread_service_principal.appservice" -> "module.key_vault.azurerm_key_vault_access_policy.me";
+  "module.app_service.data.azuread_service_principal.appservice" -> "module.key_vault.azurerm_key_vault_certificate.cert";
+  "module.app_service.data.azuread_service_principal.appservice" -> "module.key_vault.azurerm_key_vault_key.acr_cmk";
+  "module.app_service.data.azuread_service_principal.appservice" -> "module.key_vault.azurerm_key_vault_key.sql_tde_key";
+  "module.app_service.data.azuread_service_principal.appservice" -> "module.key_vault.azurerm_key_vault_secret.secrets";
+  "module.app_service.data.azuread_service_principal.appservice" -> "module.key_vault.azurerm_key_vault_secret.ssh_public_key";
+  "module.app_service.data.azuread_service_principal.appservice" -> "module.key_vault.azurerm_monitor_diagnostic_setting.kv_audit";
+  "module.app_service.data.azuread_service_principal.appservice" -> "module.key_vault.azurerm_private_endpoint.keyvault";
+  "module.app_service.data.azuread_service_principal.appservice" -> "module.key_vault.azurerm_role_assignment.kv_admin";
+  "module.app_service.data.azuread_service_principal.appservice" -> "module.key_vault.azurerm_role_assignment.kv_devops";
+  "module.app_service.data.azurerm_key_vault_secret.godaddy" -> "module.appservice_plan_linux.azurerm_service_plan.appserviceplan";
+  "module.app_service.data.azurerm_key_vault_secret.godaddy" -> "module.key_vault.azurerm_key_vault_access_policy.me";
+  "module.app_service.data.azurerm_key_vault_secret.godaddy" -> "module.key_vault.azurerm_key_vault_certificate.cert";
+  "module.app_service.data.azurerm_key_vault_secret.godaddy" -> "module.key_vault.azurerm_key_vault_key.acr_cmk";
+  "module.app_service.data.azurerm_key_vault_secret.godaddy" -> "module.key_vault.azurerm_key_vault_key.sql_tde_key";
+  "module.app_service.data.azurerm_key_vault_secret.godaddy" -> "module.key_vault.azurerm_key_vault_secret.secrets";
+  "module.app_service.data.azurerm_key_vault_secret.godaddy" -> "module.key_vault.azurerm_key_vault_secret.ssh_public_key";
+  "module.app_service.data.azurerm_key_vault_secret.godaddy" -> "module.key_vault.azurerm_monitor_diagnostic_setting.kv_audit";
+  "module.app_service.data.azurerm_key_vault_secret.godaddy" -> "module.key_vault.azurerm_private_endpoint.keyvault";
+  "module.app_service.data.azurerm_key_vault_secret.godaddy" -> "module.key_vault.azurerm_role_assignment.kv_admin";
+  "module.app_service.data.azurerm_key_vault_secret.godaddy" -> "module.key_vault.azurerm_role_assignment.kv_devops";
+  "module.app_service.azurerm_app_service_certificate.cert" -> "module.app_service.azurerm_role_assignment.kv_appservice_access";
+  "module.app_service.azurerm_app_service_certificate_binding.prod" -> "module.app_service.azurerm_app_service_certificate.cert";
+  "module.app_service.azurerm_app_service_certificate_binding.prod" -> "module.app_service.azurerm_app_service_custom_hostname_binding.prod";
+  "module.app_service.azurerm_app_service_certificate_binding.uat" -> "module.app_service.azurerm_app_service_certificate.cert";
+  "module.app_service.azurerm_app_service_certificate_binding.uat" -> "module.app_service.azurerm_app_service_custom_hostname_binding.uat";
+  "module.app_service.azurerm_app_service_custom_hostname_binding.prod" -> "module.app_service.null_resource.prod_cname_dns";
+  "module.app_service.azurerm_app_service_custom_hostname_binding.prod" -> "module.app_service.null_resource.prod_txt_dns";
+  "module.app_service.azurerm_app_service_custom_hostname_binding.uat" -> "module.app_service.null_resource.uat_cname_dns";
+  "module.app_service.azurerm_app_service_custom_hostname_binding.uat" -> "module.app_service.null_resource.uat_txt_dns";
+  "module.app_service.azurerm_app_service_virtual_network_swift_connection.vnet" -> "module.app_service.time_sleep.wait_for_app";
+  "module.app_service.azurerm_application_insights.app" -> "module.appservice_plan_linux.azurerm_service_plan.appserviceplan";
+  "module.app_service.azurerm_application_insights.app" -> "module.key_vault.azurerm_key_vault_access_policy.me";
+  "module.app_service.azurerm_application_insights.app" -> "module.key_vault.azurerm_key_vault_certificate.cert";
+  "module.app_service.azurerm_application_insights.app" -> "module.key_vault.azurerm_key_vault_key.acr_cmk";
+  "module.app_service.azurerm_application_insights.app" -> "module.key_vault.azurerm_key_vault_key.sql_tde_key";
+  "module.app_service.azurerm_application_insights.app" -> "module.key_vault.azurerm_key_vault_secret.secrets";
+  "module.app_service.azurerm_application_insights.app" -> "module.key_vault.azurerm_key_vault_secret.ssh_public_key";
+  "module.app_service.azurerm_application_insights.app" -> "module.key_vault.azurerm_monitor_diagnostic_setting.kv_audit";
+  "module.app_service.azurerm_application_insights.app" -> "module.key_vault.azurerm_private_endpoint.keyvault";
+  "module.app_service.azurerm_application_insights.app" -> "module.key_vault.azurerm_role_assignment.kv_admin";
+  "module.app_service.azurerm_application_insights.app" -> "module.key_vault.azurerm_role_assignment.kv_devops";
+  "module.app_service.azurerm_application_insights.app" -> "module.log_analytics.azurerm_log_analytics_workspace.law";
+  "module.app_service.azurerm_linux_web_app.app" -> "module.app_service.azurerm_application_insights.app";
+  "module.app_service.azurerm_linux_web_app.app" -> "module.appservice_storage_account.data.azurerm_storage_account_sas.sas";
+  "module.app_service.azurerm_linux_web_app_slot.uat" -> "module.app_service.azurerm_linux_web_app.app";
+  "module.app_service.azurerm_private_endpoint.app" -> "module.app_service.azurerm_linux_web_app.app";
+  "module.app_service.azurerm_role_assignment.app_admin" -> "module.app_service.azurerm_linux_web_app.app";
+  "module.app_service.azurerm_role_assignment.app_devops" -> "module.app_service.azurerm_linux_web_app.app";
+  "module.app_service.azurerm_role_assignment.kv_access" -> "module.app_service.azurerm_linux_web_app.app";
+  "module.app_service.azurerm_role_assignment.kv_appservice_access" -> "module.app_service.data.azuread_service_principal.appservice";
+  "module.app_service.azurerm_role_assignment.kv_cert_access" -> "module.app_service.azurerm_linux_web_app.app";
+  "module.app_service.azurerm_role_assignment.storage_access" -> "module.app_service.azurerm_linux_web_app.app";
+  "module.app_service.null_resource.prod_cname_dns" -> "module.app_service.data.azurerm_key_vault_secret.godaddy";
+  "module.app_service.null_resource.prod_cname_dns" -> "module.app_service.azurerm_linux_web_app.app";
+  "module.app_service.null_resource.prod_txt_dns" -> "module.app_service.data.azurerm_key_vault_secret.godaddy";
+  "module.app_service.null_resource.prod_txt_dns" -> "module.app_service.azurerm_linux_web_app.app";
+  "module.app_service.null_resource.uat_cname_dns" -> "module.app_service.data.azurerm_key_vault_secret.godaddy";
+  "module.app_service.null_resource.uat_cname_dns" -> "module.app_service.azurerm_linux_web_app_slot.uat";
+  "module.app_service.null_resource.uat_txt_dns" -> "module.app_service.data.azurerm_key_vault_secret.godaddy";
+  "module.app_service.null_resource.uat_txt_dns" -> "module.app_service.azurerm_linux_web_app.app";
+  "module.app_service.time_sleep.wait_for_app" -> "module.app_service.azurerm_linux_web_app.app";
+  "module.app_service.time_sleep.wait_for_dns" -> "module.app_service.null_resource.prod_cname_dns";
+  "module.app_service.time_sleep.wait_for_dns" -> "module.app_service.null_resource.prod_txt_dns";
+  "module.app_service.time_sleep.wait_for_dns" -> "module.app_service.null_resource.uat_cname_dns";
+  "module.app_service.time_sleep.wait_for_dns" -> "module.app_service.null_resource.uat_txt_dns";
+  "module.appservice_plan_linux.azurerm_service_plan.appserviceplan" -> "module.rg.azurerm_resource_group.rg";
+  "module.appservice_storage_account.data.azurerm_storage_account_sas.sas" -> "module.appservice_storage_account.azurerm_storage_account.storage_account";
+  "module.appservice_storage_account.azurerm_storage_account.storage_account" -> "module.virtual_network.azurerm_network_security_rule.nsg_rule";
+  "module.appservice_storage_account.azurerm_storage_account.storage_account" -> "module.virtual_network.azurerm_subnet_network_security_group_association.nsg_assoc";
+  "module.appservice_storage_account.azurerm_storage_account_network_rules.storage_network_rules" -> "module.app_service.azurerm_linux_web_app.app";
+  "module.appservice_storage_account.azurerm_storage_container.containers" -> "module.appservice_storage_account.azurerm_storage_account.storage_account";
+  "module.appservice_storage_account.azurerm_storage_management_policy.this" -> "module.appservice_storage_account.azurerm_storage_account.storage_account";
+  "module.bastion.azurerm_bastion_host.bastion" -> "module.bastion.azurerm_public_ip.bastion_pip";
+  "module.bastion.azurerm_public_ip.bastion_pip" -> "module.virtual_network.azurerm_network_security_rule.nsg_rule";
+  "module.bastion.azurerm_public_ip.bastion_pip" -> "module.virtual_network.azurerm_subnet_network_security_group_association.nsg_assoc";
+  "module.diag_storage_account.data.azurerm_storage_account_sas.sas" -> "module.diag_storage_account.azurerm_storage_account.storage_account";
+  "module.diag_storage_account.azurerm_storage_account.storage_account" -> "module.virtual_network.azurerm_network_security_rule.nsg_rule";
+  "module.diag_storage_account.azurerm_storage_account.storage_account" -> "module.virtual_network.azurerm_subnet_network_security_group_association.nsg_assoc";
+  "module.diag_storage_account.azurerm_storage_account_network_rules.storage_network_rules" -> "module.diag_storage_account.azurerm_storage_account.storage_account";
+  "module.diag_storage_account.azurerm_storage_container.containers" -> "module.diag_storage_account.azurerm_storage_account.storage_account";
+  "module.diag_storage_account.azurerm_storage_management_policy.this" -> "module.diag_storage_account.azurerm_storage_account.storage_account";
+  "module.jumpbox_linux_vm.data.azurerm_backup_policy_vm.policy" -> "module.jumpbox_linux_vm.data.azurerm_recovery_services_vault.vault";
+  "module.jumpbox_linux_vm.data.azurerm_client_config.current" -> "module.key_vault.azurerm_key_vault_access_policy.me";
+  "module.jumpbox_linux_vm.data.azurerm_client_config.current" -> "module.key_vault.azurerm_key_vault_certificate.cert";
+  "module.jumpbox_linux_vm.data.azurerm_client_config.current" -> "module.key_vault.azurerm_key_vault_key.acr_cmk";
+  "module.jumpbox_linux_vm.data.azurerm_client_config.current" -> "module.key_vault.azurerm_key_vault_key.sql_tde_key";
+  "module.jumpbox_linux_vm.data.azurerm_client_config.current" -> "module.key_vault.azurerm_key_vault_secret.secrets";
+  "module.jumpbox_linux_vm.data.azurerm_client_config.current" -> "module.key_vault.azurerm_key_vault_secret.ssh_public_key";
+  "module.jumpbox_linux_vm.data.azurerm_client_config.current" -> "module.key_vault.azurerm_monitor_diagnostic_setting.kv_audit";
+  "module.jumpbox_linux_vm.data.azurerm_client_config.current" -> "module.key_vault.azurerm_private_endpoint.keyvault";
+  "module.jumpbox_linux_vm.data.azurerm_client_config.current" -> "module.key_vault.azurerm_role_assignment.kv_admin";
+  "module.jumpbox_linux_vm.data.azurerm_client_config.current" -> "module.key_vault.azurerm_role_assignment.kv_devops";
+  "module.jumpbox_linux_vm.data.azurerm_key_vault_secret.localadmin_credentials" -> "module.key_vault.azurerm_key_vault_access_policy.me";
+  "module.jumpbox_linux_vm.data.azurerm_key_vault_secret.localadmin_credentials" -> "module.key_vault.azurerm_key_vault_certificate.cert";
+  "module.jumpbox_linux_vm.data.azurerm_key_vault_secret.localadmin_credentials" -> "module.key_vault.azurerm_key_vault_key.acr_cmk";
+  "module.jumpbox_linux_vm.data.azurerm_key_vault_secret.localadmin_credentials" -> "module.key_vault.azurerm_key_vault_key.sql_tde_key";
+  "module.jumpbox_linux_vm.data.azurerm_key_vault_secret.localadmin_credentials" -> "module.key_vault.azurerm_key_vault_secret.secrets";
+  "module.jumpbox_linux_vm.data.azurerm_key_vault_secret.localadmin_credentials" -> "module.key_vault.azurerm_key_vault_secret.ssh_public_key";
+  "module.jumpbox_linux_vm.data.azurerm_key_vault_secret.localadmin_credentials" -> "module.key_vault.azurerm_monitor_diagnostic_setting.kv_audit";
+  "module.jumpbox_linux_vm.data.azurerm_key_vault_secret.localadmin_credentials" -> "module.key_vault.azurerm_private_endpoint.keyvault";
+  "module.jumpbox_linux_vm.data.azurerm_key_vault_secret.localadmin_credentials" -> "module.key_vault.azurerm_role_assignment.kv_admin";
+  "module.jumpbox_linux_vm.data.azurerm_key_vault_secret.localadmin_credentials" -> "module.key_vault.azurerm_role_assignment.kv_devops";
+  "module.jumpbox_linux_vm.data.azurerm_key_vault_secret.ssh_public_key" -> "module.key_vault.azurerm_key_vault_access_policy.me";
+  "module.jumpbox_linux_vm.data.azurerm_key_vault_secret.ssh_public_key" -> "module.key_vault.azurerm_key_vault_certificate.cert";
+  "module.jumpbox_linux_vm.data.azurerm_key_vault_secret.ssh_public_key" -> "module.key_vault.azurerm_key_vault_key.acr_cmk";
+  "module.jumpbox_linux_vm.data.azurerm_key_vault_secret.ssh_public_key" -> "module.key_vault.azurerm_key_vault_key.sql_tde_key";
+  "module.jumpbox_linux_vm.data.azurerm_key_vault_secret.ssh_public_key" -> "module.key_vault.azurerm_key_vault_secret.secrets";
+  "module.jumpbox_linux_vm.data.azurerm_key_vault_secret.ssh_public_key" -> "module.key_vault.azurerm_key_vault_secret.ssh_public_key";
+  "module.jumpbox_linux_vm.data.azurerm_key_vault_secret.ssh_public_key" -> "module.key_vault.azurerm_monitor_diagnostic_setting.kv_audit";
+  "module.jumpbox_linux_vm.data.azurerm_key_vault_secret.ssh_public_key" -> "module.key_vault.azurerm_private_endpoint.keyvault";
+  "module.jumpbox_linux_vm.data.azurerm_key_vault_secret.ssh_public_key" -> "module.key_vault.azurerm_role_assignment.kv_admin";
+  "module.jumpbox_linux_vm.data.azurerm_key_vault_secret.ssh_public_key" -> "module.key_vault.azurerm_role_assignment.kv_devops";
+  "module.jumpbox_linux_vm.data.azurerm_lb.existing" -> "module.key_vault.azurerm_key_vault_access_policy.me";
+  "module.jumpbox_linux_vm.data.azurerm_lb.existing" -> "module.key_vault.azurerm_key_vault_certificate.cert";
+  "module.jumpbox_linux_vm.data.azurerm_lb.existing" -> "module.key_vault.azurerm_key_vault_key.acr_cmk";
+  "module.jumpbox_linux_vm.data.azurerm_lb.existing" -> "module.key_vault.azurerm_key_vault_key.sql_tde_key";
+  "module.jumpbox_linux_vm.data.azurerm_lb.existing" -> "module.key_vault.azurerm_key_vault_secret.secrets";
+  "module.jumpbox_linux_vm.data.azurerm_lb.existing" -> "module.key_vault.azurerm_key_vault_secret.ssh_public_key";
+  "module.jumpbox_linux_vm.data.azurerm_lb.existing" -> "module.key_vault.azurerm_monitor_diagnostic_setting.kv_audit";
+  "module.jumpbox_linux_vm.data.azurerm_lb.existing" -> "module.key_vault.azurerm_private_endpoint.keyvault";
+  "module.jumpbox_linux_vm.data.azurerm_lb.existing" -> "module.key_vault.azurerm_role_assignment.kv_admin";
+  "module.jumpbox_linux_vm.data.azurerm_lb.existing" -> "module.key_vault.azurerm_role_assignment.kv_devops";
+  "module.jumpbox_linux_vm.data.azurerm_lb_backend_address_pool.existing" -> "module.jumpbox_linux_vm.data.azurerm_lb.existing";
+  "module.jumpbox_linux_vm.data.azurerm_recovery_services_vault.vault" -> "module.key_vault.azurerm_key_vault_access_policy.me";
+  "module.jumpbox_linux_vm.data.azurerm_recovery_services_vault.vault" -> "module.key_vault.azurerm_key_vault_certificate.cert";
+  "module.jumpbox_linux_vm.data.azurerm_recovery_services_vault.vault" -> "module.key_vault.azurerm_key_vault_key.acr_cmk";
+  "module.jumpbox_linux_vm.data.azurerm_recovery_services_vault.vault" -> "module.key_vault.azurerm_key_vault_key.sql_tde_key";
+  "module.jumpbox_linux_vm.data.azurerm_recovery_services_vault.vault" -> "module.key_vault.azurerm_key_vault_secret.secrets";
+  "module.jumpbox_linux_vm.data.azurerm_recovery_services_vault.vault" -> "module.key_vault.azurerm_key_vault_secret.ssh_public_key";
+  "module.jumpbox_linux_vm.data.azurerm_recovery_services_vault.vault" -> "module.key_vault.azurerm_monitor_diagnostic_setting.kv_audit";
+  "module.jumpbox_linux_vm.data.azurerm_recovery_services_vault.vault" -> "module.key_vault.azurerm_private_endpoint.keyvault";
+  "module.jumpbox_linux_vm.data.azurerm_recovery_services_vault.vault" -> "module.key_vault.azurerm_role_assignment.kv_admin";
+  "module.jumpbox_linux_vm.data.azurerm_recovery_services_vault.vault" -> "module.key_vault.azurerm_role_assignment.kv_devops";
+  "module.jumpbox_linux_vm.data.azurerm_storage_account.diag" -> "module.key_vault.azurerm_key_vault_access_policy.me";
+  "module.jumpbox_linux_vm.data.azurerm_storage_account.diag" -> "module.key_vault.azurerm_key_vault_certificate.cert";
+  "module.jumpbox_linux_vm.data.azurerm_storage_account.diag" -> "module.key_vault.azurerm_key_vault_key.acr_cmk";
+  "module.jumpbox_linux_vm.data.azurerm_storage_account.diag" -> "module.key_vault.azurerm_key_vault_key.sql_tde_key";
+  "module.jumpbox_linux_vm.data.azurerm_storage_account.diag" -> "module.key_vault.azurerm_key_vault_secret.secrets";
+  "module.jumpbox_linux_vm.data.azurerm_storage_account.diag" -> "module.key_vault.azurerm_key_vault_secret.ssh_public_key";
+  "module.jumpbox_linux_vm.data.azurerm_storage_account.diag" -> "module.key_vault.azurerm_monitor_diagnostic_setting.kv_audit";
+  "module.jumpbox_linux_vm.data.azurerm_storage_account.diag" -> "module.key_vault.azurerm_private_endpoint.keyvault";
+  "module.jumpbox_linux_vm.data.azurerm_storage_account.diag" -> "module.key_vault.azurerm_role_assignment.kv_admin";
+  "module.jumpbox_linux_vm.data.azurerm_storage_account.diag" -> "module.key_vault.azurerm_role_assignment.kv_devops";
+  "module.jumpbox_linux_vm.azurerm_application_security_group.asg" -> "module.key_vault.azurerm_key_vault_access_policy.me";
+  "module.jumpbox_linux_vm.azurerm_application_security_group.asg" -> "module.key_vault.azurerm_key_vault_certificate.cert";
+  "module.jumpbox_linux_vm.azurerm_application_security_group.asg" -> "module.key_vault.azurerm_key_vault_key.acr_cmk";
+  "module.jumpbox_linux_vm.azurerm_application_security_group.asg" -> "module.key_vault.azurerm_key_vault_key.sql_tde_key";
+  "module.jumpbox_linux_vm.azurerm_application_security_group.asg" -> "module.key_vault.azurerm_key_vault_secret.secrets";
+  "module.jumpbox_linux_vm.azurerm_application_security_group.asg" -> "module.key_vault.azurerm_key_vault_secret.ssh_public_key";
+  "module.jumpbox_linux_vm.azurerm_application_security_group.asg" -> "module.key_vault.azurerm_monitor_diagnostic_setting.kv_audit";
+  "module.jumpbox_linux_vm.azurerm_application_security_group.asg" -> "module.key_vault.azurerm_private_endpoint.keyvault";
+  "module.jumpbox_linux_vm.azurerm_application_security_group.asg" -> "module.key_vault.azurerm_role_assignment.kv_admin";
+  "module.jumpbox_linux_vm.azurerm_application_security_group.asg" -> "module.key_vault.azurerm_role_assignment.kv_devops";
+  "module.jumpbox_linux_vm.azurerm_availability_set.avset" -> "module.key_vault.azurerm_key_vault_access_policy.me";
+  "module.jumpbox_linux_vm.azurerm_availability_set.avset" -> "module.key_vault.azurerm_key_vault_certificate.cert";
+  "module.jumpbox_linux_vm.azurerm_availability_set.avset" -> "module.key_vault.azurerm_key_vault_key.acr_cmk";
+  "module.jumpbox_linux_vm.azurerm_availability_set.avset" -> "module.key_vault.azurerm_key_vault_key.sql_tde_key";
+  "module.jumpbox_linux_vm.azurerm_availability_set.avset" -> "module.key_vault.azurerm_key_vault_secret.secrets";
+  "module.jumpbox_linux_vm.azurerm_availability_set.avset" -> "module.key_vault.azurerm_key_vault_secret.ssh_public_key";
+  "module.jumpbox_linux_vm.azurerm_availability_set.avset" -> "module.key_vault.azurerm_monitor_diagnostic_setting.kv_audit";
+  "module.jumpbox_linux_vm.azurerm_availability_set.avset" -> "module.key_vault.azurerm_private_endpoint.keyvault";
+  "module.jumpbox_linux_vm.azurerm_availability_set.avset" -> "module.key_vault.azurerm_role_assignment.kv_admin";
+  "module.jumpbox_linux_vm.azurerm_availability_set.avset" -> "module.key_vault.azurerm_role_assignment.kv_devops";
+  "module.jumpbox_linux_vm.azurerm_backup_protected_vm.vm_backup" -> "module.jumpbox_linux_vm.data.azurerm_backup_policy_vm.policy";
+  "module.jumpbox_linux_vm.azurerm_backup_protected_vm.vm_backup" -> "module.jumpbox_linux_vm.azurerm_linux_virtual_machine.vm";
+  "module.jumpbox_linux_vm.azurerm_linux_virtual_machine.vm" -> "module.jumpbox_linux_vm.data.azurerm_key_vault_secret.localadmin_credentials";
+  "module.jumpbox_linux_vm.azurerm_linux_virtual_machine.vm" -> "module.jumpbox_linux_vm.data.azurerm_key_vault_secret.ssh_public_key";
+  "module.jumpbox_linux_vm.azurerm_linux_virtual_machine.vm" -> "module.jumpbox_linux_vm.data.azurerm_storage_account.diag";
+  "module.jumpbox_linux_vm.azurerm_linux_virtual_machine.vm" -> "module.jumpbox_linux_vm.azurerm_availability_set.avset";
+  "module.jumpbox_linux_vm.azurerm_linux_virtual_machine.vm" -> "module.jumpbox_linux_vm.azurerm_network_interface.nic";
+  "module.jumpbox_linux_vm.azurerm_linux_virtual_machine.vm" -> "module.jumpbox_linux_vm.azurerm_storage_account.diag";
+  "module.jumpbox_linux_vm.azurerm_managed_disk.data_disk" -> "module.key_vault.azurerm_key_vault_access_policy.me";
+  "module.jumpbox_linux_vm.azurerm_managed_disk.data_disk" -> "module.key_vault.azurerm_key_vault_certificate.cert";
+  "module.jumpbox_linux_vm.azurerm_managed_disk.data_disk" -> "module.key_vault.azurerm_key_vault_key.acr_cmk";
+  "module.jumpbox_linux_vm.azurerm_managed_disk.data_disk" -> "module.key_vault.azurerm_key_vault_key.sql_tde_key";
+  "module.jumpbox_linux_vm.azurerm_managed_disk.data_disk" -> "module.key_vault.azurerm_key_vault_secret.secrets";
+  "module.jumpbox_linux_vm.azurerm_managed_disk.data_disk" -> "module.key_vault.azurerm_key_vault_secret.ssh_public_key";
+  "module.jumpbox_linux_vm.azurerm_managed_disk.data_disk" -> "module.key_vault.azurerm_monitor_diagnostic_setting.kv_audit";
+  "module.jumpbox_linux_vm.azurerm_managed_disk.data_disk" -> "module.key_vault.azurerm_private_endpoint.keyvault";
+  "module.jumpbox_linux_vm.azurerm_managed_disk.data_disk" -> "module.key_vault.azurerm_role_assignment.kv_admin";
+  "module.jumpbox_linux_vm.azurerm_managed_disk.data_disk" -> "module.key_vault.azurerm_role_assignment.kv_devops";
+  "module.jumpbox_linux_vm.azurerm_network_interface.nic" -> "module.jumpbox_linux_vm.azurerm_public_ip.pip";
+  "module.jumpbox_linux_vm.azurerm_network_interface_application_security_group_association.asg_attach" -> "module.jumpbox_linux_vm.azurerm_application_security_group.asg";
+  "module.jumpbox_linux_vm.azurerm_network_interface_application_security_group_association.asg_attach" -> "module.jumpbox_linux_vm.azurerm_network_interface.nic";
+  "module.jumpbox_linux_vm.azurerm_network_interface_backend_address_pool_association.lb" -> "module.jumpbox_linux_vm.data.azurerm_lb_backend_address_pool.existing";
+  "module.jumpbox_linux_vm.azurerm_network_interface_backend_address_pool_association.lb" -> "module.jumpbox_linux_vm.azurerm_network_interface.nic";
+  "module.jumpbox_linux_vm.azurerm_public_ip.pip" -> "module.key_vault.azurerm_key_vault_access_policy.me";
+  "module.jumpbox_linux_vm.azurerm_public_ip.pip" -> "module.key_vault.azurerm_key_vault_certificate.cert";
+  "module.jumpbox_linux_vm.azurerm_public_ip.pip" -> "module.key_vault.azurerm_key_vault_key.acr_cmk";
+  "module.jumpbox_linux_vm.azurerm_public_ip.pip" -> "module.key_vault.azurerm_key_vault_key.sql_tde_key";
+  "module.jumpbox_linux_vm.azurerm_public_ip.pip" -> "module.key_vault.azurerm_key_vault_secret.secrets";
+  "module.jumpbox_linux_vm.azurerm_public_ip.pip" -> "module.key_vault.azurerm_key_vault_secret.ssh_public_key";
+  "module.jumpbox_linux_vm.azurerm_public_ip.pip" -> "module.key_vault.azurerm_monitor_diagnostic_setting.kv_audit";
+  "module.jumpbox_linux_vm.azurerm_public_ip.pip" -> "module.key_vault.azurerm_private_endpoint.keyvault";
+  "module.jumpbox_linux_vm.azurerm_public_ip.pip" -> "module.key_vault.azurerm_role_assignment.kv_admin";
+  "module.jumpbox_linux_vm.azurerm_public_ip.pip" -> "module.key_vault.azurerm_role_assignment.kv_devops";
+  "module.jumpbox_linux_vm.azurerm_role_assignment.vm_kv_secrets" -> "module.jumpbox_linux_vm.azurerm_linux_virtual_machine.vm";
+  "module.jumpbox_linux_vm.azurerm_storage_account.diag" -> "module.key_vault.azurerm_key_vault_access_policy.me";
+  "module.jumpbox_linux_vm.azurerm_storage_account.diag" -> "module.key_vault.azurerm_key_vault_certificate.cert";
+  "module.jumpbox_linux_vm.azurerm_storage_account.diag" -> "module.key_vault.azurerm_key_vault_key.acr_cmk";
+  "module.jumpbox_linux_vm.azurerm_storage_account.diag" -> "module.key_vault.azurerm_key_vault_key.sql_tde_key";
+  "module.jumpbox_linux_vm.azurerm_storage_account.diag" -> "module.key_vault.azurerm_key_vault_secret.secrets";
+  "module.jumpbox_linux_vm.azurerm_storage_account.diag" -> "module.key_vault.azurerm_key_vault_secret.ssh_public_key";
+  "module.jumpbox_linux_vm.azurerm_storage_account.diag" -> "module.key_vault.azurerm_monitor_diagnostic_setting.kv_audit";
+  "module.jumpbox_linux_vm.azurerm_storage_account.diag" -> "module.key_vault.azurerm_private_endpoint.keyvault";
+  "module.jumpbox_linux_vm.azurerm_storage_account.diag" -> "module.key_vault.azurerm_role_assignment.kv_admin";
+  "module.jumpbox_linux_vm.azurerm_storage_account.diag" -> "module.key_vault.azurerm_role_assignment.kv_devops";
+  "module.jumpbox_linux_vm.azurerm_virtual_machine_data_disk_attachment.attach" -> "module.jumpbox_linux_vm.azurerm_linux_virtual_machine.vm";
+  "module.jumpbox_linux_vm.azurerm_virtual_machine_data_disk_attachment.attach" -> "module.jumpbox_linux_vm.azurerm_managed_disk.data_disk";
+  "module.jumpbox_linux_vm.azurerm_virtual_machine_extension.ama" -> "module.jumpbox_linux_vm.azurerm_linux_virtual_machine.vm";
+  "module.key_vault.data.azurerm_client_config.current" -> "module.access.azuread_group_member.members";
+  "module.key_vault.data.azurerm_client_config.current" -> "module.diag_storage_account.data.azurerm_storage_account_sas.sas";
+  "module.key_vault.data.azurerm_client_config.current" -> "module.diag_storage_account.azurerm_storage_account_network_rules.storage_network_rules";
+  "module.key_vault.data.azurerm_client_config.current" -> "module.diag_storage_account.azurerm_storage_container.containers";
+  "module.key_vault.data.azurerm_client_config.current" -> "module.diag_storage_account.azurerm_storage_management_policy.this";
+  "module.key_vault.data.azurerm_client_config.current" -> "module.private_dns.azurerm_private_dns_zone_virtual_network_link.links";
+  "module.key_vault.data.azurerm_storage_account.kv_audit" -> "module.access.azuread_group_member.members";
+  "module.key_vault.data.azurerm_storage_account.kv_audit" -> "module.diag_storage_account.data.azurerm_storage_account_sas.sas";
+  "module.key_vault.data.azurerm_storage_account.kv_audit" -> "module.diag_storage_account.azurerm_storage_account_network_rules.storage_network_rules";
+  "module.key_vault.data.azurerm_storage_account.kv_audit" -> "module.diag_storage_account.azurerm_storage_container.containers";
+  "module.key_vault.data.azurerm_storage_account.kv_audit" -> "module.diag_storage_account.azurerm_storage_management_policy.this";
+  "module.key_vault.data.azurerm_storage_account.kv_audit" -> "module.private_dns.azurerm_private_dns_zone_virtual_network_link.links";
+  "module.key_vault.azurerm_key_vault.kv" -> "module.key_vault.data.azurerm_client_config.current";
+  "module.key_vault.azurerm_key_vault_access_policy.me" -> "module.key_vault.azurerm_key_vault.kv";
+  "module.key_vault.azurerm_key_vault_certificate.cert" -> "module.key_vault.azurerm_role_assignment.kv_tf_admin";
+  "module.key_vault.azurerm_key_vault_key.acr_cmk" -> "module.key_vault.azurerm_role_assignment.kv_tf_admin";
+  "module.key_vault.azurerm_key_vault_key.sql_tde_key" -> "module.key_vault.azurerm_role_assignment.kv_tf_admin";
+  "module.key_vault.azurerm_key_vault_secret.secrets" -> "module.key_vault.azurerm_role_assignment.kv_tf_admin";
+  "module.key_vault.azurerm_key_vault_secret.ssh_public_key" -> "module.key_vault.azurerm_role_assignment.kv_tf_admin";
+  "module.key_vault.azurerm_monitor_diagnostic_setting.kv_audit" -> "module.key_vault.data.azurerm_storage_account.kv_audit";
+  "module.key_vault.azurerm_monitor_diagnostic_setting.kv_audit" -> "module.key_vault.azurerm_key_vault.kv";
+  "module.key_vault.azurerm_private_endpoint.keyvault" -> "module.key_vault.azurerm_key_vault.kv";
+  "module.key_vault.azurerm_role_assignment.kv_admin" -> "module.key_vault.azurerm_key_vault.kv";
+  "module.key_vault.azurerm_role_assignment.kv_devops" -> "module.key_vault.azurerm_key_vault.kv";
+  "module.key_vault.azurerm_role_assignment.kv_tf_admin" -> "module.key_vault.azurerm_key_vault.kv";
+  "module.log_analytics.azurerm_log_analytics_workspace.law" -> "module.rg.azurerm_resource_group.rg";
+  "module.log_analytics.azurerm_role_assignment.law_monitoring_contributor" -> "module.access.azuread_group.groups";
+  "module.log_analytics.azurerm_role_assignment.law_monitoring_contributor" -> "module.log_analytics.azurerm_log_analytics_workspace.law";
+  "module.log_analytics.azurerm_role_assignment.law_monitoring_reader" -> "module.access.azuread_group.groups";
+  "module.log_analytics.azurerm_role_assignment.law_monitoring_reader" -> "module.log_analytics.azurerm_log_analytics_workspace.law";
+  "module.mssql.data.azurerm_client_config.current" -> "module.key_vault.azurerm_key_vault_access_policy.me";
+  "module.mssql.data.azurerm_client_config.current" -> "module.key_vault.azurerm_key_vault_certificate.cert";
+  "module.mssql.data.azurerm_client_config.current" -> "module.key_vault.azurerm_key_vault_key.acr_cmk";
+  "module.mssql.data.azurerm_client_config.current" -> "module.key_vault.azurerm_key_vault_key.sql_tde_key";
+  "module.mssql.data.azurerm_client_config.current" -> "module.key_vault.azurerm_key_vault_secret.secrets";
+  "module.mssql.data.azurerm_client_config.current" -> "module.key_vault.azurerm_key_vault_secret.ssh_public_key";
+  "module.mssql.data.azurerm_client_config.current" -> "module.key_vault.azurerm_monitor_diagnostic_setting.kv_audit";
+  "module.mssql.data.azurerm_client_config.current" -> "module.key_vault.azurerm_private_endpoint.keyvault";
+  "module.mssql.data.azurerm_client_config.current" -> "module.key_vault.azurerm_role_assignment.kv_admin";
+  "module.mssql.data.azurerm_client_config.current" -> "module.key_vault.azurerm_role_assignment.kv_devops";
+  "module.mssql.data.azurerm_client_config.current" -> "module.mssql_storage_account.data.azurerm_storage_account_sas.sas";
+  "module.mssql.data.azurerm_client_config.current" -> "module.mssql_storage_account.azurerm_storage_account_network_rules.storage_network_rules";
+  "module.mssql.data.azurerm_client_config.current" -> "module.mssql_storage_account.azurerm_storage_container.containers";
+  "module.mssql.data.azurerm_client_config.current" -> "module.mssql_storage_account.azurerm_storage_management_policy.this";
+  "module.mssql.data.azurerm_key_vault_secret.sql_credentials" -> "module.key_vault.azurerm_key_vault_access_policy.me";
+  "module.mssql.data.azurerm_key_vault_secret.sql_credentials" -> "module.key_vault.azurerm_key_vault_certificate.cert";
+  "module.mssql.data.azurerm_key_vault_secret.sql_credentials" -> "module.key_vault.azurerm_key_vault_key.acr_cmk";
+  "module.mssql.data.azurerm_key_vault_secret.sql_credentials" -> "module.key_vault.azurerm_key_vault_key.sql_tde_key";
+  "module.mssql.data.azurerm_key_vault_secret.sql_credentials" -> "module.key_vault.azurerm_key_vault_secret.secrets";
+  "module.mssql.data.azurerm_key_vault_secret.sql_credentials" -> "module.key_vault.azurerm_key_vault_secret.ssh_public_key";
+  "module.mssql.data.azurerm_key_vault_secret.sql_credentials" -> "module.key_vault.azurerm_monitor_diagnostic_setting.kv_audit";
+  "module.mssql.data.azurerm_key_vault_secret.sql_credentials" -> "module.key_vault.azurerm_private_endpoint.keyvault";
+  "module.mssql.data.azurerm_key_vault_secret.sql_credentials" -> "module.key_vault.azurerm_role_assignment.kv_admin";
+  "module.mssql.data.azurerm_key_vault_secret.sql_credentials" -> "module.key_vault.azurerm_role_assignment.kv_devops";
+  "module.mssql.data.azurerm_key_vault_secret.sql_credentials" -> "module.mssql_storage_account.data.azurerm_storage_account_sas.sas";
+  "module.mssql.data.azurerm_key_vault_secret.sql_credentials" -> "module.mssql_storage_account.azurerm_storage_account_network_rules.storage_network_rules";
+  "module.mssql.data.azurerm_key_vault_secret.sql_credentials" -> "module.mssql_storage_account.azurerm_storage_container.containers";
+  "module.mssql.data.azurerm_key_vault_secret.sql_credentials" -> "module.mssql_storage_account.azurerm_storage_management_policy.this";
+  "module.mssql.azurerm_mssql_database.db" -> "module.mssql.azurerm_mssql_server.mssql";
+  "module.mssql.azurerm_mssql_database_extended_auditing_policy.db_audit" -> "module.mssql.azurerm_mssql_database.db";
+  "module.mssql.azurerm_mssql_firewall_rule.allow_ips" -> "module.mssql.azurerm_mssql_server.mssql";
+  "module.mssql.azurerm_mssql_outbound_firewall_rule.outbound" -> "module.mssql.azurerm_mssql_server.mssql";
+  "module.mssql.azurerm_mssql_server.mssql" -> "module.mssql.data.azurerm_client_config.current";
+  "module.mssql.azurerm_mssql_server.mssql" -> "module.mssql.data.azurerm_key_vault_secret.sql_credentials";
+  "module.mssql.azurerm_mssql_server_extended_auditing_policy.server_audit" -> "module.mssql.azurerm_mssql_server.mssql";
+  "module.mssql.azurerm_mssql_server_security_alert_policy.alerts" -> "module.mssql.azurerm_mssql_server.mssql";
+  "module.mssql.azurerm_mssql_server_transparent_data_encryption.tde" -> "module.mssql.azurerm_mssql_server.mssql";
+  "module.mssql.azurerm_mssql_server_vulnerability_assessment.va" -> "module.mssql.azurerm_mssql_server_security_alert_policy.alerts";
+  "module.mssql.azurerm_mssql_virtual_network_rule.service_endpoint_app" -> "module.mssql.azurerm_mssql_server.mssql";
+  "module.mssql.azurerm_private_endpoint.mssql" -> "module.mssql.azurerm_mssql_server.mssql";
+  "module.mssql.azurerm_role_assignment.sql_kv_cert" -> "module.mssql.azurerm_mssql_server.mssql";
+  "module.mssql.azurerm_role_assignment.sql_kv_keys" -> "module.mssql.azurerm_mssql_server.mssql";
+  "module.mssql.azurerm_role_assignment.sql_kv_secrets" -> "module.mssql.azurerm_mssql_server.mssql";
+  "module.mssql.azurerm_role_assignment.sql_storage_blob_contributor" -> "module.mssql.azurerm_mssql_server.mssql";
+  "module.mssql_storage_account.data.azurerm_storage_account_sas.sas" -> "module.mssql_storage_account.azurerm_storage_account.storage_account";
+  "module.mssql_storage_account.azurerm_storage_account.storage_account" -> "module.virtual_network.azurerm_network_security_rule.nsg_rule";
+  "module.mssql_storage_account.azurerm_storage_account.storage_account" -> "module.virtual_network.azurerm_subnet_network_security_group_association.nsg_assoc";
+  "module.mssql_storage_account.azurerm_storage_account_network_rules.storage_network_rules" -> "module.mssql_storage_account.azurerm_storage_account.storage_account";
+  "module.mssql_storage_account.azurerm_storage_container.containers" -> "module.mssql_storage_account.azurerm_storage_account.storage_account";
+  "module.mssql_storage_account.azurerm_storage_management_policy.this" -> "module.mssql_storage_account.azurerm_storage_account.storage_account";
+  "module.private_dns.azurerm_private_dns_zone.zones" -> "module.virtual_network.azurerm_network_security_rule.nsg_rule";
+  "module.private_dns.azurerm_private_dns_zone.zones" -> "module.virtual_network.azurerm_subnet_network_security_group_association.nsg_assoc";
+  "module.private_dns.azurerm_private_dns_zone_virtual_network_link.links" -> "module.private_dns.azurerm_private_dns_zone.zones";
+  "module.virtual_network.azurerm_network_security_group.nsg" -> "module.rg.azurerm_resource_group.rg";
+  "module.virtual_network.azurerm_network_security_rule.nsg_rule" -> "module.virtual_network.azurerm_network_security_group.nsg";
+  "module.virtual_network.azurerm_subnet.subnet" -> "module.virtual_network.azurerm_virtual_network.vnet";
+  "module.virtual_network.azurerm_subnet_network_security_group_association.nsg_assoc" -> "module.virtual_network.azurerm_network_security_group.nsg";
+  "module.virtual_network.azurerm_subnet_network_security_group_association.nsg_assoc" -> "module.virtual_network.azurerm_subnet.subnet";
+  "module.virtual_network.azurerm_virtual_network.vnet" -> "module.rg.azurerm_resource_group.rg";
+  "module.vnet_peering.azurerm_virtual_network_peering.vnet_peering" -> "module.virtual_network.azurerm_network_security_rule.nsg_rule";
+  "module.vnet_peering.azurerm_virtual_network_peering.vnet_peering" -> "module.virtual_network.azurerm_subnet_network_security_group_association.nsg_assoc";
+}
