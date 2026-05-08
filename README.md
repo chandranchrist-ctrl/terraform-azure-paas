@@ -155,6 +155,8 @@ Each environment controls:
 
 ## 1.2 Traffic Flow Architecture
 
+<img width="1009" height="672" alt="image" src="https://github.com/user-attachments/assets/7bbd5c31-6c7b-4c43-91dc-bb7e833e3f2d" />
+
 ## 🚦 Frontend Traffic Flow
 
 Client requests enter through the public application endpoint and are routed toward the frontend application hosted on Azure App Service.
