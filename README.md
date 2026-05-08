@@ -265,24 +265,10 @@ The implementation supports:
 
 ## 🔐 Access / RBAC Module
 
-The RBAC module centralizes Azure AD group integration and role assignment management.
+* The RBAC module centralizes Azure AD group integration and role assignment management using Azure RBAC, managed identities, and service-specific role mappings.
+* Role assignments are dynamically associated with resources such as AKS, ACR, Key Vault, App Service, and networking components to support identity-driven access governance. 
 
-The implementation uses:
-
-*   Azure AD groups
-*   Azure RBAC
-*   Managed identities
-*   Service-specific role mappings
-    
-Role assignments are dynamically attached to:
-
-*   AKS
-*   ACR
-*   Key Vault
-*   App Service
-*   Networking resources
-    
-📌 This approach simplifies access governance and avoids hardcoded identity dependencies.
+📌 This approach improves access management consistency while avoiding hardcoded identity dependencies across the platform.
 
 ## 📦 ACR Module
 
@@ -296,12 +282,7 @@ The module includes:
 *   Optional retention configuration
 *   Registry isolation patterns
     
-📌 The implementation also considers separation between:
-
-*   Management plane RBAC
-*   Data plane RBAC
-    
-📌 which became an important operational learning during deployment.
+📌 The implementation also accounts for the separation between management plane RBAC and data plane RBAC, which became an important operational consideration and learning during deployment and access validation workflows.
 
 ## ☸️ AKS Module
 
@@ -367,63 +348,30 @@ The module also automates:
 
 ## 🔑 Managed Identities
 
-The platform extensively uses Azure Managed Identities to eliminate credential-based authentication wherever possible.
+* The platform extensively uses Azure Managed Identities to enable secure, identity-based authentication without relying on hardcoded credentials or secrets. 
+* Managed identities are leveraged for AKS kubelet authentication, App Service access to Key Vault, ACR image pull operations, monitoring integrations, and internal Azure service communication. 
 
-Managed identities are used for:
-
-*   AKS kubelet authentication
-*   App Service access to Key Vault
-*   ACR image pull operations
-*   Monitoring integrations
-*   Internal Azure service communication
-
-📌 This reduces credential exposure and simplifies secret management.
+📌 This approach improves security by reducing credential exposure while simplifying authentication and secret management across the platform.
 
 ## 🛡️ RBAC Strategy
 
-Azure RBAC is implemented using centralized Azure AD group assignments and Terraform-managed role mappings.
+* Azure RBAC is implemented using centralized Azure AD group assignments and Terraform-managed role mappings to provide controlled, identity-driven access management across the platform. 
+* The RBAC model follows least-privilege principles with environment-based access separation, service-specific role assignments, and dynamic role attachment patterns.
 
-The RBAC design includes:
-
-*   Least privilege access principles
-*   Environment-based access separation
-*   Service-specific role assignments
-*   Dynamic RBAC attachment patterns
-*   Identity-driven operational access
-
-Roles are assigned across:
-
-*   AKS
-*   ACR
-*   Key Vault
-*   Resource Groups
-*   Monitoring resources
-*   Networking resources
+📌 Roles are assigned across resources such as AKS, ACR, Key Vault, Resource Groups, monitoring services, and networking components to ensure consistent and scalable access governance.
 
 ## 🔐 Key Vault Integration
 
-Azure Key Vault is integrated for centralized secret and certificate management.
+* Azure Key Vault is integrated to provide centralized secret and certificate management across the platform.
+* The implementation supports managed identity-based secret access, SSL certificate storage, application secret retrieval, and centralized management of sensitive configurations.
 
-The implementation supports:
-
-*   Managed identity-based secret access
-*   SSL certificate storage
-*   Application secret retrieval
-*   Centralized sensitive configuration management
-    
-📌 Applications retrieve secrets without embedding credentials inside Terraform or application code.
+📌 Applications securely retrieve secrets directly from Key Vault without embedding credentials or sensitive values within Terraform configurations or application code.
 
 ## 🚫 IP Restrictions
 
-Network access restrictions are implemented using:
+* Network access restrictions are implemented using App Service access restrictions, SCM endpoint restrictions, NSG-based subnet filtering, private endpoint isolation, and controlled ingress patterns.
 
-*   App Service access restrictions
-*   SCM endpoint restrictions
-*   NSG-based subnet filtering
-*   Private endpoint isolation
-*   Controlled ingress patterns
-    
-📌 This helps reduce unnecessary public exposure of platform services.
+📌 These controls help minimize unnecessary public exposure and strengthen network-level security across platform services.
 
 ## 🔒 TLS Enforcement
 
@@ -438,26 +386,16 @@ The implementation includes:
     
 ## 🔗 Private Endpoints
 
-Private endpoints are used to enable secure internal Azure service communication.
+* Private Endpoints are used to enable secure internal communication between Azure services over the private network.
+* The implementation supports private connectivity for App Service, Key Vault, and Azure SQL Database (MSSQL), helping reduce public exposure of critical platform components.
 
-The implementation supports private connectivity for:
-
-*   App Service
-*   Key Vault
-*   Azure SQLDB (MSSQL) 
-
-📌 Private DNS integration ensures proper internal hostname resolution.
+📌 Private DNS integration is configured to ensure proper internal hostname resolution for privately exposed services.
 
 ## ⚠️ Deployment Safeguards (AKS)
 
-The Terraform implementation includes operational safeguards such as:
+* The AKS deployment architecture includes operational safeguards implemented through Terraform using conditional resource protection, controlled feature toggles, environment-aware deployment logic, and preventive validation structures.
 
-*   Conditional resource protection
-*   Controlled feature toggles
-*   Environment-aware deployment logic
-*   Preventive validation structures
-    
-📌 These safeguards help reduce accidental infrastructure misconfiguration during deployments.
+📌 These safeguards help minimize accidental infrastructure misconfigurations and improve deployment consistency across environments.
 
 ---
 
@@ -465,41 +403,24 @@ The Terraform implementation includes operational safeguards such as:
 
 ## 📊 Log Analytics
 
-Centralized logging is implemented using Azure Log Analytics workspaces.
+* Centralized logging is implemented using Azure Log Analytics workspaces to provide unified monitoring and operational visibility across the platform.
+* The implementation aggregates AKS logs, App Service application logs, diagnostic logs from services such as Key Vault and jump host VMs, and AKS platform metrics into a centralized workspace.
 
-The platform aggregates:
-
-*   AKS logs
-*   Application logs (appservice)
-*   Diagnostic logs (keyvault & jhostvm)
-*   Platform metrics (AKS)
-
-📌 This enables centralized operational visibility across environments.
+📌 This enables streamlined monitoring, troubleshooting, and cross-environment operational visibility.
 
 ## 📈 Application Insights (App Service)
 
-Application Insights is integrated for application-level observability and telemetry collection.
+* Application Insights is integrated to provide application-level observability and telemetry collection across the platform.
+* The implementation supports application performance monitoring and request tracing to help analyze application behavior, performance trends, and runtime issues.
 
-The implementation supports:
-
-*   Application performance monitoring
-*   Request tracing
-
-📌 Application Insights configuration is injected dynamically through Terraform-managed settings.
+📌 Application Insights configuration is dynamically injected through Terraform-managed application settings for consistent environment-based deployment configuration.
 
 ## ☸️ AKS DCR Monitoring
 
-📌 AKS monitoring is implemented using Data Collection Rules (DCR)-based monitoring architecture.
+* AKS monitoring is implemented using a Data Collection Rules (DCR)-based monitoring architecture integrated with Azure Monitor and Log Analytics.
+* The implementation supports container insights, cluster performance monitoring, node telemetry, pod-level diagnostics, and centralized log collection.
 
-The implementation supports:
-
-*   Container insights
-*   Cluster performance monitoring
-*   Node telemetry
-*   Pod-level diagnostics
-*   Log Analytics integration
-    
-This aligns with modern Azure Monitor integration patterns.
+📌 Selective monitoring configurations and exclusions were also considered to optimize log collection behavior and reduce unnecessary telemetry overhead within lab-constrained environments.
 
 ## 🗄️ Blob Log Storage
 
@@ -511,18 +432,6 @@ Blob-based logging supports:
 *   Backup diagnostics
 *   Historical troubleshooting
 *   Cost-optimized log retention
-
-## 🩺 Diagnostics Strategy
-
-The observability architecture follows a layered monitoring approach combining:
-
-*   Platform monitoring
-*   Application telemetry
-*   Infrastructure diagnostics
-*   Log aggregation
-*   Centralized operational visibility
-    
-The monitoring design allows both real-time troubleshooting and historical analysis.
 
 ---
 
@@ -559,58 +468,39 @@ Post-deployment validation includes:
 
 ## ⏳ RBAC Propagation Timing
 
-Azure RBAC assignments may require propagation time before permissions become effective.
+* An important operational behavior observed in the platform was that Azure RBAC role assignments may require propagation time before permissions become fully effective across services.
+*  This affected AKS ↔ ACR integrations, managed identity authentication, Key Vault access validation, and Terraform deployment sequencing.
 
-This behavior affected:
-
-*   AKS ↔ ACR integration
-*   Managed identity access
-*   Key Vault access
-*   Terraform deployment sequencing
-    
-📌 Operational delays and retry logic became important during validation.
+📌 To handle these timing dependencies, deployment workflows incorporated validation retries, controlled dependency ordering, and temporary wait periods to ensure RBAC permissions were properly propagated before dependent resources attempted access operations.
 
 ## 🔐 ACR RBAC Separation
 
-Azure Container Registry separates:
+* During implementation, an important operational learning was understanding the separation between Azure Container Registry management plane RBAC and data plane RBAC permissions.
+* There were scenarios where administrative-level access to the registry existed successfully, but AKS image pull operations still failed because the required AcrPull role assignment was not configured for the kubelet managed identity.
 
-*   Management plane RBAC
-*   Data plane RBAC
-
-📌 This created scenarios where administrative access existed while image pull operations still failed due to missing AcrPull assignments.
-📌 This became an important operational learning during implementation.
+📌 This highlighted the importance of correctly configuring both management and image pull permissions when integrating AKS with ACR using RBAC-based authentication.
 
 ## 🌐 VNet Integration Drift
 
-*  App Service VNet integrations occasionally introduced Terraform drift behavior due to Azure-managed backend changes.
-*  Lifecycle ignore rules and validation workflows were evaluated to reduce unnecessary infrastructure churn.
+* An operational challenge observed with App Service VNet Integration was intermittent Terraform state drift caused by Azure-managed backend synchronization behavior. In some cases, after running terraform apply, the VNet integration appeared as not configured even though the deployment had completed successfully.
+
+📌 This behavior is important to consider when making changes to App Service configurations, deployment slots, or networking settings, as VNet integration inconsistencies can affect internal communication between the App Service and backend services.
+
+📌 Resolving the issue occasionally required removing the affected resource from Terraform state using `terraform state rm` followed by reapplying the configuration to allow the integration to propagate and attach correctly. This became an important practical learning while handling App Service networking integrations.
 
 ## 💾 Backup Restriction Issue
 
-App Service backup configurations introduced operational limitations when combined with certain storage and networking configurations.
+* An operational challenge encountered during App Service backup implementation involved SAS URL formatting and Storage Account network restrictions. The backup configuration required a properly formatted SAS URL, and an issue was identified where the generated Terraform output appended an additional ? character, causing backup operations to fail during configuration validation.
 
-This required careful validation of:
+* Another important observation was that App Service backup access to the Storage Account behaves as an application-level authenticated request using the provided SAS URL, rather than a trusted Azure service interaction covered by the AzureServices bypass rule.
 
-*   Storage account accessibility (If SAS involved)
-*   Authentication behavior
+📌 Because the Storage Account was configured with default_action = "Deny", backup operations were blocked even with Azure service bypass enabled. To resolve this, App Service outbound IP addresses were dynamically added to the Storage Account network rules to explicitly allow backup access.
 
-## 🔗 Managed Identity Dependency Ordering
-
-Managed identity-based integrations introduced dependency sequencing challenges during deployment.
-
-Examples included:
-
-*   Key Vault access before application startup
-*   AKS image pull authorization
-*   Monitoring extension attachment
-
-📌 Terraform dependency management became critical for stable deployments.
+📌 This also introduced deployment dependency considerations, since the App Service outbound IPs become available only after the App Service deployment is completed, requiring careful Terraform sequencing and configuration handling.
 
 ---
 
 # 6. Useful Operational Commands
-
-## ⚙️ Terraform State & Operations
 
 - `terraform import`  
   Imports existing Azure resources into Terraform state.
@@ -621,12 +511,8 @@ Examples included:
 - `terraform console`  
   Opens an interactive Terraform expression console.
 
-## 📜 Application Log Monitoring
-
 - `az webapp log tail`  
   Streams live App Service application logs.
-
-## 🌐 Connectivity Validation
 
 - `curl`  
   Validates application endpoints and API responses.
@@ -642,33 +528,24 @@ Examples included:
 
 # 7. Future Enhancements
 
-Future platform improvements may include:
+* Future platform improvements may include Azure Front Door integration and Web Application Firewall (WAF) capabilities to enhance global routing, edge security, and application protection patterns.
 
-*   Azure Front Door integration
-*   Web Application Firewall (WAF) integration
+📌 These components were intentionally reserved for future implementation due to lab environment constraints and cost considerations, and were not fully validated as part of the current deployment scope.
 
 ---
 
 # 8. Appendix
 
+This section provides supporting reference information related to DNS configuration, Azure RBAC roles, supported service SKUs, and other implementation-specific platform details used throughout the architecture.
+
 ## 🌐 DNS Zones
 
-The implementation supports both:
-
-*   Public DNS zones
-*   Private DNS zones
-
-DNS zones are used for:
-
-*   AKS private clusters
-*   App Service private endpoints
-*   MSSQL Private Endpoint
-*   Internal hostname resolution
-*   SSL validation workflows
+* The implementation uses both public and private DNS zones to support external application access and internal private service communication.
+* Public DNS management is integrated through GoDaddy for domain resolution, custom domain bindings, and SSL validation workflows, while Private DNS zones are used for AKS private clusters, App Service private endpoints, MSSQL Private Endpoints, and internal hostname resolution across privately connected Azure services.
 
 ## 🛡️ Azure Roles
 
-Common Azure roles used in the platform include:
+Common Azure roles used throughout the infrastructure deployment include:
 
 *   Contributor
 *   Reader
@@ -679,26 +556,23 @@ Common Azure roles used in the platform include:
     
 ## ⚙️ Supported SKUs
 
-The platform supports configurable SKUs for:
+The implementation uses configurable SKUs across the following Azure services:
 
-*   App Service Plans
-*   AKS node pools
-*   Storage Accounts
-*   Azure Container Registry
+*   App Service Plans:         P0v3
+*   AKS node pools:            VM Size: Standard_B2s_v2
+*   Storage Accounts:          SKU: Standard_LRS
+*   Azure Container Registry:  SKU: Premium
 
 📌 SKU selection is environment-driven and optimized for lab-based deployments.
 
 ---
 # 🚀 Key Design Principles
 
-1. Modular Terraform architecture
-2. Security-first implementation
-3. Environment isolation
-4. Reusable infrastructure modules
-5. Identity-driven access control
-6. Public/private deployment flexibility
-7. Monitoring and observability integration
-8. Infrastructure automation and scalability
+1. Modular and reusable Terraform-based infrastructure design
+2. Security-first architecture with identity-driven access control
+3. Environment-isolated deployment structure with configurable integrations
+4. Flexible public and private deployment support across platform services
+5. Scalable and automation-oriented infrastructure implementation
 
 ---
 
@@ -708,15 +582,14 @@ This project demonstrates a modular and secure Azure PaaS platform architecture 
 
 The implementation covers:
 
-AKS and App Service deployments
-Private networking patterns
-RBAC-driven access control
-Managed identity integrations
-Monitoring and observability
-Terraform-based automation
-Environment-based infrastructure deployments
+1. AKS and App Service deployments
+2. Private networking patterns
+3. RBAC-driven access control
+4. Managed identity integrations
+5. Monitoring and observability
+6. Terraform-based automation
+7. Environment-based infrastructure deployments
 
-💡 The platform also includes operational automation components such as automated DNS record creation using PowerShell scripts to simplify application onboarding, validation, and deployment workflows.
 💡 Despite being developed within a constrained lab environment, the architecture follows real-world cloud engineering practices and provides a strong foundation for enterprise-scale Azure platform design.
 
 ---
@@ -724,8 +597,7 @@ Environment-based infrastructure deployments
 # Important Notes
 
 1. This project is intended for learning, experimentation, and architectural demonstration purposes.
-2 .Some Azure resources used in this implementation may incur cloud usage costs when deployed.
+2. Some Azure resources used in this implementation may incur cloud usage costs when deployed.
 3. Certain configurations may require subscription-level permissions, elevated RBAC access, or Azure service quotas.
 4. Some SKU selections, regional deployments, feature enablement, and scaling configurations were intentionally constrained based on lab environment limitations and cost optimization considerations.
 5. While certain deployment choices were optimized for lab constraints, the Terraform codebase remains modular, extensible, and aligned with enterprise implementation patterns.
-
