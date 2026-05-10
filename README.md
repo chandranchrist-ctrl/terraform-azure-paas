@@ -69,7 +69,7 @@ Despite these constraints, the platform maintains enterprise-oriented design pri
 
 ## Folder Structure
 
-terraform-azure-infra
+terraform-azure-paas
 
 - cloudops-app                        -> test application code
   - backend (app.js + package.json)
