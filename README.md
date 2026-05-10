@@ -344,7 +344,6 @@ The implementation includes:
 *   GoDaddy DNS automation
 *   Custom domain binding
 *   Private endpoint integration
-*   Blob-based diagnostic logging
 *   Runtime configuration through app settings
 
 The module also automates:
