@@ -45,7 +45,7 @@ locals {
     health_check_eviction_time_in_min = 10
     ftps_state                        = "FtpsOnly"
     scm_minimum_tls_version           = "1.2"
-    http_logging_enabled = true
+    http_logging_enabled              = true
   }
 
   site_config_uat = {
@@ -66,9 +66,9 @@ locals {
   # LOGS
   logs_config = {
     application_logs = {
-      file_system_level = "Information"       # enables app logging pipeline
+      file_system_level = "Information" # enables app logging pipeline
 
-      level             = "Information"       # controls log severity captured
+      level             = "Information" # controls log severity captured
       retention_in_days = 7
       sas_url           = var.app_logs_sas_url
     }

@@ -1,7 +1,7 @@
 # Network - Bastion Public IP
 resource "azurerm_public_ip" "bastion_pip" {
 
-  count  = var.enable_bastion ? 1 : 0
+  count = var.enable_bastion ? 1 : 0
 
   name                = "${var.env}-bastion-pip"
   location            = var.location
@@ -14,7 +14,7 @@ resource "azurerm_public_ip" "bastion_pip" {
 # Network Security - Bastion Host
 resource "azurerm_bastion_host" "bastion" {
 
-  count  = var.enable_bastion ? 1 : 0
+  count = var.enable_bastion ? 1 : 0
 
   name                = "${var.env}-bastion"
   location            = var.location
