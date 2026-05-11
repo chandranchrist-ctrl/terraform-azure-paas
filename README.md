@@ -105,7 +105,7 @@ terraform-azure-paas
 
 ## 1. Infrastructure Architecture
 
-<img width="891" height="672" alt="image" src="https://github.com/user-attachments/assets/c3a35d04-049d-4e28-b5b1-6214ede339a4" />
+<img width="891" height="672" alt="image" src="https://github.com/user-attachments/assets/ff1b9369-ec5c-4d35-ba06-750df5556e04" />
 
 ## 🏗️ Core Resource Layout
 
